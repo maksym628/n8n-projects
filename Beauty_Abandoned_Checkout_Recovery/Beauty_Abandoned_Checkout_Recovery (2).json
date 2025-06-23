@@ -1,0 +1,404 @@
+{
+  "name": "Beauty Abandoned Checkout Recovery",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://a.klaviyo.com/api/events",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Authorization\": \"Klaviyo-API-Key pk_81e6b01a5e5eb27460eb881d564c10f222\",\n  \"Content-Type\": \"application/vnd.api+json\",\n  \"Accept\": \"application/vnd.api+json\",\n  \"revision\": \"2024-10-15\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1552,
+        -180
+      ],
+      "id": "37c10dca-8c2b-4018-83e5-a64b4c8c967c",
+      "name": "Send to Klaviyo",
+      "notesInFlow": false,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "abandoned-checkout",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1180,
+        -180
+      ],
+      "id": "6a8916a4-7e51-4ea6-a65a-8d63cbc8f9d1",
+      "name": "Webhook Trigger",
+      "webhookId": "b98f3b66-5678-45b5-a2dc-b87b9d6b66fe"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function Node: Smart Delay Calculation\nconst checkout = $input.first().json;\nconst cartValue = parseFloat(checkout.total_price);\nconst customerTier = checkout.customer?.tags?.includes('VIP') ? 'VIP' : 'Standard';\n\n// Dynamic delay based on cart value and customer tier\nlet delayMinutes = 15; // Default\n\nif (cartValue > 100) {\n  delayMinutes = 30; // Higher value carts get longer delay\n}\n\nif (customerTier === 'VIP') {\n  delayMinutes = 45; // VIP customers get more time\n}\n\nreturn [{\n  json: {\n    ...checkout,\n    delayMinutes: delayMinutes,\n    scheduledSendTime: new Date(Date.now() + delayMinutes * 60000).toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        -180
+      ],
+      "id": "3540e43f-30c7-43a2-90c5-bbcde409a817",
+      "name": "Delay"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function Node: Validate Customer Data\nconst webhookData = $input.first().json;\n\n// Extract the actual checkout data from the webhook body\nconst checkout = webhookData.body;\n\n// Validation checks with correct data paths\nconst validationResults = {\n  hasEmail: !!checkout.email && checkout.email.includes('@'),\n  hasCustomerId: !!checkout.customer?.id,\n  hasProducts: checkout.line_items && checkout.line_items.length > 0,\n  isAbandoned: !checkout.completed_at,\n  cartValue: checkout.total_price ? parseFloat(checkout.total_price) : 0\n};\n\n// Check if all validations pass\nconst isValid = validationResults.hasEmail && \n                validationResults.hasCustomerId && \n                validationResults.hasProducts && \n                validationResults.isAbandoned &&\n                validationResults.cartValue > 0;\n\nif (!isValid) {\n  // Log validation failure details\n  console.log('Validation failed details:', {\n    validationResults: validationResults,\n    checkoutData: checkout,\n    emailFound: checkout.email,\n    customerIdFound: checkout.customer?.id,\n    productsFound: checkout.line_items?.length\n  });\n  \n  return [{\n    json: {\n      error: 'Validation failed',\n      validationResults: validationResults,\n      skipWorkflow: true,\n      debugInfo: {\n        dataStructure: 'body object detected',\n        actualEmail: checkout.email,\n        actualCustomerId: checkout.customer?.id,\n        actualCartValue: checkout.total_price\n      }\n    }\n  }];\n}\n\n// Add validation metadata to checkout data and pass the body content forward\nreturn [{\n  json: {\n    customerId: checkout.customer.id,\n    isValid,\n    validation: {\n      passed: true,\n      checkedAt: new Date().toISOString(),\n      cartValue: validationResults.cartValue\n    },\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -740,
+        -180
+      ],
+      "id": "c84cb2e7-8782-4355-8374-72e87e68f829",
+      "name": "Validate"
+    },
+    {
+      "parameters": {
+        "url": "=https://lake-house-n8n.myshopify.com/admin/api/2023-10/customers/{{ $json.customerId }}.json\n",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "shopifyAccessTokenApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -520,
+        -180
+      ],
+      "id": "35abdfc1-c243-4054-b3c7-c4842517e162",
+      "name": "Get Customer",
+      "credentials": {
+        "shopifyAccessTokenApi": {
+          "id": "gu8RrASjfRC0A9d3",
+          "name": "Shopify"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simplified Customer Data Enrichment (No Node References)\nconst inputData = $input.first().json;\nconst requestedData = $node[\"Webhook Trigger\"].json;\n\nconsole.log('Input data keys:', Object.keys(inputData));\nconsole.log('Input data sample:', JSON.stringify(inputData).substring(0, 200));\n\n// Extract customer data\nconst customer = inputData.customer;\n\n// Create checkout data from what we have\nconst checkoutData = requestedData.body;\n\n// Calculate customer metrics\nconst totalSpent = parseFloat(customer.total_spent);\nconst ordersCount = customer.orders_count;\nconst avgOrderValue = ordersCount > 0 ? totalSpent / ordersCount : 0;\n\n// Determine loyalty tier\nlet loyaltyTier = 'New';\nif (totalSpent > 500) loyaltyTier = 'VIP';\nelse if (totalSpent > 200) loyaltyTier = 'Valued';\nelse if (ordersCount > 0) loyaltyTier = 'Returning';\n\n// Analyze abandoned cart\nconst abandonedProducts = (checkoutData.line_items).map(item => ({\n  title: item.title,\n  vendor: item.vendor,\n  product_type: item.product_type,\n  price: parseFloat(item.price),\n  quantity: item.quantity,\n  tag: item.tag,\n  alt: item.alt,\n  variant_title: item.variant_title\n}));\n\n// Calculate cart insights\nconst cartValue = parseFloat(checkoutData.total_price);\nconst productCount = abandonedProducts.reduce((sum, item) => sum + item.quantity, 0);\nconst averageProductPrice = productCount > 0 ? cartValue / productCount : 0;\n\n// Determine customer engagement level\nlet engagementLevel = 'Medium';\nif (ordersCount >= 5) engagementLevel = 'High';\nelse if (ordersCount <= 1) engagementLevel = 'Low';\n\n// Create seasonal context\nconst currentMonth = new Date().getMonth() + 1;\nlet seasonalContext = '';\nif ([12, 1, 2].includes(currentMonth)) seasonalContext = 'Winter skincare needs';\nelse if ([3, 4, 5].includes(currentMonth)) seasonalContext = 'Spring refresh';\nelse if ([6, 7, 8].includes(currentMonth)) seasonalContext = 'Summer protection';\nelse seasonalContext = 'Fall preparation';\n\n// Determine geographic context\nconst location = customer.default_address;\nconst cityContext = location.city ? `${location.city}, ${location.country}` : location.country;\n\n// Helper functions\nfunction calculateProfileCompleteness() {\n  let score = 0;\n  if (customer.first_name) score += 20;\n  if (customer.phone) score += 15;\n  if (location.city) score += 15;\n  if (ordersCount > 0) score += 30;\n  return score;\n}\n\nfunction calculateUrgencyIndicators() {\n  const indicators = [];\n  \n  if (cartValue > avgOrderValue * 1.5) {\n    indicators.push('high_value_cart');\n  }\n  \n  if (abandonedProducts.some(p => p.title.toLowerCase().includes('limited') || \n                                   p.title.toLowerCase().includes('sale'))) {\n    indicators.push('limited_time_offer');\n  }\n  \n  const daysSinceAbandoned = Math.floor((new Date() - new Date(checkoutData.created_at)) / (1000 * 60 * 60 * 24));\n  if (daysSinceAbandoned >= 2) {\n    indicators.push('time_sensitive');\n  }\n  \n  return indicators;\n}\n\nfunction identifyPersonalizationOpportunities() {\n  const opportunities = [];\n  \n  if (ordersCount === 0) {\n    opportunities.push('first_time_buyer');\n  }\n  \n  if (loyaltyTier === 'VIP') {\n    opportunities.push('vip_treatment');\n  }\n  \n  return opportunities;\n}\n\n// Create enriched customer profile\nconst enrichedProfile = {\n  // Basic customer info\n  customer: {\n    id: customer.id,\n    email: customer.email,\n    first_name: customer.first_name,\n    last_name: customer.last_name,\n    phone: customer.phone,\n    city: location.city,\n    country: location.country,\n    province: location.province,\n    zip: location.zip,\n    tags: customer.tags,\n    created_at: customer.created_at,\n  },\n  \n  // Purchase analytics\n  purchase_analytics: {\n    total_spent: totalSpent,\n    orders_count: ordersCount,\n    avg_order_value: Math.round(avgOrderValue * 100) / 100,\n    engagement_level: engagementLevel,\n    loyalty_tier: loyaltyTier\n  },\n  \n  // Beauty profile\n  beauty_profile: {\n    seasonal_context: seasonalContext,\n    location_context: cityContext\n  },\n  \n  // Abandoned cart details\n  abandoned_cart: {\n    id: checkoutData.id,\n    token: checkoutData.token,\n    created_at: checkoutData.created_at,\n    updated_at: checkoutData.updated_at,\n    total_price: cartValue,\n    currency: checkoutData.currency,\n    products: abandonedProducts,\n    product_count: productCount,\n    avg_product_price: Math.round(averageProductPrice * 100) / 100,\n    checkout_url: checkoutData.abandoned_checkout_url,\n    cart_vs_avg_order: avgOrderValue > 0 ? Math.round((cartValue / avgOrderValue) * 100) / 100 : 0\n  },\n  \n  // Purchase history context\n  purchase_history: {\n    repeat_customer: ordersCount > 1,\n    high_value_customer: totalSpent > 300\n  },\n  \n  // Personalization metadata\n  personalization_data: {\n    profile_completeness: calculateProfileCompleteness(),\n    urgency_indicators: calculateUrgencyIndicators(),\n    personalization_opportunities: identifyPersonalizationOpportunities()\n  }\n};\n\nreturn [{ json: enrichedProfile }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        -180
+      ],
+      "id": "257a5a29-c519-4779-9558-5775f98b2544",
+      "name": "Enrich Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function Node: Prepare AI Prompt\nconst profile = $input.first().json;\n\n// Extract key data safely with fallbacks\nconst customer = profile.customer;\nconst analytics = profile.purchase_analytics;\nconst beautyProfile = profile.beauty_profile;\nconst cart = profile.abandoned_cart;\nconst opportunities = profile.personalization_data?.personalization_opportunities;\n\n// Build dynamic prompt based on customer data\nlet prompt = `Hi Sofia! I need your help creating a personalized message for a customer who abandoned their checkout. Here's what I know:\\n\\n`;\n\n// Customer basics\nprompt += `**Customer:** ${customer.first_name} ${customer.last_name}\\n`;\nif (beautyProfile.location_context) {\n  prompt += `**Location:** ${beautyProfile.location_context}\\n`;\n}\nif (beautyProfile.seasonal_context) {\n  prompt += `**Season:** ${beautyProfile.seasonal_context}\\n`;\n}\n\nprompt += `\\n`;\n\n// Purchase history and loyalty\nif (analytics.orders_count > 0) {\n  prompt += `**Their Beauty Journey with Us:**\\n`;\n  prompt += `- ${analytics.orders_count} previous orders totaling $${analytics.total_spent}\\n`;\n  prompt += `- Customer tier: ${analytics.loyalty_tier}\\n`;\n  prompt += `- Average order value: $${analytics.avg_order_value}\\n`;\n  prompt += `- Engagement level: ${analytics.engagement_level}\\n`;\n} else {\n  prompt += `**New Customer:** This would be their very first purchase with us! 🎉\\n`;\n}\n\n// Abandoned cart details\nprompt += `\\n**Their Abandoned Cart ($${cart.total_price || '0'}):**\\n`;\nif (cart.products && cart.products.length > 0) {\n  cart.products.forEach((product, index) => {\n    prompt += `${index + 1}. ${product.title}`;\n    if (product.vendor) prompt += ` by ${product.vendor}`;\n    prompt += ` - $${product.price}`;\n    if (product.quantity > 1) prompt += ` (qty: ${product.quantity})`;\n  });\n} else {\n  prompt += `- Cart details not available\\n`;\n}\n\n// Add personalization insights\nif (opportunities.length > 0) {\n  prompt += `\\n**Personalization Opportunities:** ${opportunities.join(', ')}\\n`;\n}\n\n// Special context for different customer tiers\nif (analytics.loyalty_tier === 'VIP') {\n  prompt += `\\n**VIP Note:** This is a high-value customer - acknowledge their loyalty and provide premium-level service and insights.\\n`;\n} else if (analytics.loyalty_tier === 'New') {\n  prompt += `\\n**New Customer Note:** Help them feel welcome and confident about choosing our brand. Focus on building trust.\\n`;\n}\n\n// Instructions for message creation\nprompt += `\\n**Create a personalized message (150-200 words) that:**\n\n1. **Personal Greeting:** Use their name and acknowledge their relationship with the brand\n2. **Product Connection:** Show how the abandoned items work together or solve specific beauty goals\n3. **Expert Tips:** Include 1-2 beauty tips or insights about the products or how to use them\n4. **Gentle Motivation:** Create a natural reason to complete the purchase (timing, availability, routine benefits)\n5. **Easy Action:** Include checkout completion in a natural, helpful way\n\n**Writing Guidelines:**\n- Tone: Warm, knowledgeable, personal (like texting a beauty-savvy friend)\n- Focus: Genuinely helpful advice, not sales pressure\n- Style: Natural, conversational, confident expertise\n- Length: 150-200 words exactly\n- Avoid: Generic phrases, excessive exclamation points, obvious sales tactics\n\n**The message should feel like Sofia genuinely noticed they left items behind and wants to help them achieve their beauty goals.**`;\n\n// Return enriched data with prompt\nreturn [{\n  json: {\n    ...profile,\n    ai_prompt: prompt,\n    prompt_generated_at: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        -180
+      ],
+      "id": "324ed5cb-f922-4d20-aa2f-0076ee89e1f9",
+      "name": "Prepare Prompt"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "GPT-4"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are Sofia, a certified lifestyle and product advisor with 15+ years of experience in premium retail consultation. You specialize in personalized recommendations across beauty, skincare, fashion, home goods, sports equipment, wellness products, and luxury lifestyle items.\\n\\nYour expertise spans multiple categories:\\n- Beauty & Skincare: Ingredients, formulations, application techniques, skin types\\n- Fashion & Accessories: Style guidance, quality assessment, personal styling\\n- Sports & Recreation: Equipment selection, performance optimization, activity-specific gear\\n- Home & Lifestyle: Decor, wellness items, seasonal products, luxury goods\\n- Luxury Items: Craftsmanship appreciation, investment value, exclusivity\\n\\nYour approach is warm, knowledgeable, and personal - like getting expert advice from a trusted friend who happens to be an authority on premium lifestyle products. You adapt your expertise focus based on the product category while maintaining consistent personality.\\n\\nFor beauty products, you share ingredient knowledge and application tips. For sports equipment, you discuss performance and quality features. For fashion items, you focus on style and versatility. For home goods, you emphasize comfort and aesthetic impact.\\n\\nYou understand that customers invest in products that enhance their lifestyle, whether through improved routines, elevated style, better performance, or enriched daily experiences. Your goal is helping them feel confident about purchases that will genuinely improve their lives.\\n\\nAlways acknowledge their relationship with the brand, demonstrate deep product knowledge specific to the category, integrate products into their lifestyle context, and create natural motivation to complete their purchase",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.ai_prompt }}"
+            }
+          ]
+        },
+        "simplify": false,
+        "options": {
+          "maxTokens": 300,
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        140,
+        -180
+      ],
+      "id": "93288f72-695a-4ae0-a24e-cedf3d9df592",
+      "name": "AI Generate",
+      "credentials": {
+        "openAiApi": {
+          "id": "4rozvQbcJsActTew",
+          "name": "OpenAI_GPT4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function Node: Prepare Evaluation Prompt (FIXED)\nconst inputData = $input.first().json;\nconst profile = $node[\"Enrich Data\"].json\n\nconst generatedMessage = inputData.choices?.[0]?.message?.content;\n\n// Extract customer context for evaluation\nconst customer = profile.customer;\nconst analytics = profile.purchase_analytics;\nconst beautyProfile = profile.beauty_profile;\nconst cart = profile.abandoned_cart;\n\n// Build comprehensive evaluation prompt\nlet evaluationPrompt = `Please evaluate this abandoned cart recovery message for persuasive effectiveness and quality:\\n\\n`;\n\nevaluationPrompt += `**MESSAGE TO EVALUATE:**\\n\"${generatedMessage}\"\\n\\n`;\n\nevaluationPrompt += `**CUSTOMER CONTEXT:**\\n`;\nevaluationPrompt += `- Name: ${customer?.first_name}\\n`;\nevaluationPrompt += `- Loyalty Tier: ${analytics?.loyalty_tier}\\n`;\nevaluationPrompt += `- Previous Spending: $${analytics?.total_spent}\\n`;\nevaluationPrompt += `- Cart Value: $${cart?.total_price}\\n`;\nevaluationPrompt += `- Orders Count: ${analytics?.orders_count}\\n`;\nevaluationPrompt += `- Engagement Level: ${analytics?.engagement_level}\\n`;\n\nif (beautyProfile?.preferred_brands && beautyProfile?.preferred_brands.length > 0) {\n  evaluationPrompt += `- Preferred Brands: ${beautyProfile?.preferred_brands.join(', ')}\\n`;\n}\n\nif (beautyProfile?.location_context) {\n  evaluationPrompt += `- Location: ${beautyProfile?.location_context}\\n`;\n}\n\nif (cart?.products && cart?.products.length > 0) {\n  evaluationPrompt += `- Abandoned Products: ${cart?.products.map(p => p.title).join(', ')}\\n`;\n}\n\nevaluationPrompt += `\\n**EVALUATION CRITERIA (Rate 1-10 for each):**\\n\\n`;\n\nevaluationPrompt += `**1. Personalization Score** (1=Generic template, 10=Hyper-personalized)\\n`;\nevaluationPrompt += `- Uses customer name naturally and appropriately\\n`;\nevaluationPrompt += `- References specific purchase history or preferences\\n`;\nevaluationPrompt += `- Acknowledges customer loyalty level appropriately\\n`;\nevaluationPrompt += `- Incorporates location/seasonal relevance when applicable\\n`;\nevaluationPrompt += `- Shows understanding of their beauty journey\\n\\n`;\n\nevaluationPrompt += `**2. Emotional Connection** (1=Transactional, 10=Emotionally resonant)\\n`;\nevaluationPrompt += `- Creates personal bond with the customer\\n`;\nevaluationPrompt += `- Shows genuine care for customer's beauty goals\\n`;\nevaluationPrompt += `- Builds trust and relationship\\n`;\nevaluationPrompt += `- Feels authentic and warm\\n`;\nevaluationPrompt += `- Demonstrates empathy and understanding\\n\\n`;\n\nevaluationPrompt += `**3. Beauty Expertise Level** (1=Basic product mention, 10=Expert advisor)\\n`;\nevaluationPrompt += `- Demonstrates deep beauty and skincare knowledge\\n`;\nevaluationPrompt += `- Provides valuable tips or insights\\n`;\nevaluationPrompt += `- Shows understanding of how products work together\\n`;\nevaluationPrompt += `- Educates while engaging\\n`;\nevaluationPrompt += `- Positions brand as beauty authority\\n\\n`;\n\nevaluationPrompt += `**4. Urgency Balance** (1=No urgency, 10=Perfect balance)\\n`;\nevaluationPrompt += `- Creates appropriate sense of urgency\\n`;\nevaluationPrompt += `- Avoids pushy or aggressive sales tactics\\n`;\nevaluationPrompt += `- Uses authentic reasons (stock, seasonal timing, routine benefits)\\n`;\nevaluationPrompt += `- Motivates action without pressure\\n`;\nevaluationPrompt += `- Feels helpful rather than manipulative\\n\\n`;\n\nevaluationPrompt += `**5. Call-to-Action Strength** (1=Weak/missing, 10=Compelling)\\n`;\nevaluationPrompt += `- Provides clear next step\\n`;\nevaluationPrompt += `- Integrates checkout completion naturally\\n`;\nevaluationPrompt += `- Easy to follow through\\n`;\nevaluationPrompt += `- Motivating but not aggressive\\n`;\nevaluationPrompt += `- Feels like natural conclusion\\n\\n`;\n\nevaluationPrompt += `**6. Brand Voice Consistency** (1=Off-brand, 10=Perfect brand alignment)\\n`;\nevaluationPrompt += `- Matches premium beauty brand tone\\n`;\nevaluationPrompt += `- Professional yet approachable\\n`;\nevaluationPrompt += `- Consistent with beauty advisor persona\\n`;\nevaluationPrompt += `- Maintains brand values and positioning\\n`;\nevaluationPrompt += `- Feels authentic to brand personality\\n\\n`;\n\nevaluationPrompt += `**7. Advisory Tone Quality** (1=Very salesy, 10=Expert consultant)\\n`;\nevaluationPrompt += `- Focuses on helping vs. selling\\n`;\nevaluationPrompt += `- Avoids aggressive sales language\\n`;\nevaluationPrompt += `- Maintains consultant/advisor approach\\n`;\nevaluationPrompt += `- Builds long-term relationship value\\n`;\nevaluationPrompt += `- Feels like trusted friend advice\\n\\n`;\n\nevaluationPrompt += `**RESPONSE FORMAT REQUIRED:**\\n`;\nevaluationPrompt += `Respond with ONLY valid JSON in this exact format:\\n\\n`;\n\nevaluationPrompt += `\\`\\`\\`json\\n{\\n`;\nevaluationPrompt += `  \"personalization_score\": 8.5,\\n`;\nevaluationPrompt += `  \"emotional_connection\": 7.2,\\n`;\nevaluationPrompt += `  \"expertise_level\": 9.1,\\n`;\nevaluationPrompt += `  \"urgency_balance\": 7.8,\\n`;\nevaluationPrompt += `  \"cta_strength\": 8.0,\\n`;\nevaluationPrompt += `  \"brand_consistency\": 8.7,\\n`;\nevaluationPrompt += `  \"tone_quality\": 9.2,\\n`;\nevaluationPrompt += `  \"overall_score\": 8.4,\\n`;\nevaluationPrompt += `  \"confidence_level\": \"high\",\\n`;\nevaluationPrompt += `  \"message_effectiveness\": \"excellent\",\\n`;\nevaluationPrompt += `  \"improvement_suggestion\": \"Consider adding more specific seasonal beauty tips for current weather\",\\n`;\nevaluationPrompt += `  \"recommended_action\": \"send_immediately\",\\n`;\nevaluationPrompt += `  \"key_strengths\": [\"Strong personalization\", \"Expert beauty advice\", \"Natural tone\"],\\n`;\nevaluationPrompt += `  \"areas_for_improvement\": [\"Could enhance urgency\", \"More seasonal context\"]\\n`;\nevaluationPrompt += `}\\n\\`\\`\\`\\n\\n`;\n\nevaluationPrompt += `**SCORING GUIDELINES:**\\n`;\nevaluationPrompt += `- 9.0-10.0: Exceptional, industry-leading quality\\n`;\nevaluationPrompt += `- 8.0-8.9: Excellent, above industry standard\\n`;\nevaluationPrompt += `- 7.0-7.9: Good, meets professional standards\\n`;\nevaluationPrompt += `- 6.0-6.9: Acceptable, minor improvements needed\\n`;\nevaluationPrompt += `- Below 6.0: Needs significant improvement\\n\\n`;\n\nevaluationPrompt += `**RECOMMENDED ACTIONS:**\\n`;\nevaluationPrompt += `- \"send_immediately\": Overall score 8.0+\\n`;\nevaluationPrompt += `- \"send_with_confidence\": Overall score 7.5-7.9\\n`;\nevaluationPrompt += `- \"improve_and_resend\": Overall score 6.5-7.4\\n`;\nevaluationPrompt += `- \"regenerate_completely\": Overall score below 6.5\\n\\n`;\n\nevaluationPrompt += `Provide honest, objective evaluation based on the message quality and customer context.`;\n\nreturn [{\n  json: {\n    ...profile,\n    evaluation_prompt: evaluationPrompt,\n    original_message: generatedMessage,\n    evaluation_timestamp: new Date().toISOString(),\n    message_source: profile.generated_message ? 'profile_data' : 'fallback_sample'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        516,
+        -180
+      ],
+      "id": "58f5a4e8-cbb8-419c-9f62-18ee88161b48",
+      "name": "Prepare Evaluation"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "GPT-4"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are an expert in persuasive communication and email marketing effectiveness, specifically for beauty and cosmetics brands. You have 15+ years of experience analyzing marketing messages for their ability to recover abandoned carts while maintaining brand authenticity and customer relationships.\\n\\nYour evaluation expertise includes:\\n- Personalization depth and authenticity assessment\\n- Emotional resonance and connection analysis\\n- Beauty industry expertise demonstration\\n- Urgency balance without pressure tactics\\n- Call-to-action effectiveness measurement\\n- Brand voice consistency evaluation\\n- Customer experience optimization\\n- Conversion psychology for beauty consumers\\n\\nYou provide objective, data-driven evaluations with specific, actionable feedback for improvement. Your assessments help optimize message performance while maintaining ethical marketing practices.\n",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.evaluation_prompt }}"
+            }
+          ]
+        },
+        "simplify": false,
+        "options": {
+          "frequency_penalty": 0,
+          "maxTokens": 600,
+          "presence_penalty": 0,
+          "temperature": 0.1,
+          "topP": 0.9
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        736,
+        -180
+      ],
+      "id": "b93c14d4-d4bc-4e39-8255-638a997ec33b",
+      "name": "AI Evaluate1",
+      "credentials": {
+        "openAiApi": {
+          "id": "4rozvQbcJsActTew",
+          "name": "OpenAI_GPT4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function Node: Advanced Quality Gate Logic (FIXED)\nconst inputData = $input.first().json;\n\n// Get evaluation response from the current input data\nlet evaluationResponse;\nlet evaluation;\n\n// Try to find the evaluation data in the current input\nif (inputData.evaluation_response) {\n  evaluationResponse = inputData.evaluation_response;\n} else if (inputData.ai_evaluation) {\n  evaluationResponse = inputData.ai_evaluation;\n} else if (inputData.choices && inputData.choices[0] && inputData.choices[0].message) {\n  // If this node receives direct OpenAI response\n  evaluationResponse = inputData.choices[0].message.content;\n} else {\n  // Create mock evaluation for testing\n  evaluationResponse = JSON.stringify({\n    \"personalization_score\": 8.2,\n    \"emotional_connection\": 7.8,\n    \"expertise_level\": 8.5,\n    \"urgency_balance\": 7.6,\n    \"cta_strength\": 8.0,\n    \"brand_consistency\": 8.3,\n    \"tone_quality\": 8.7,\n    \"overall_score\": 8.2,\n    \"confidence_level\": \"high\",\n    \"message_effectiveness\": \"excellent\",\n    \"improvement_suggestion\": \"Consider adding more seasonal context\",\n    \"recommended_action\": \"send_immediately\",\n    \"key_strengths\": [\"Strong personalization\", \"Expert beauty advice\", \"Natural tone\"],\n    \"areas_for_improvement\": [\"Could enhance urgency\"]\n  });\n}\n\nconsole.log('Evaluation response type:', typeof evaluationResponse);\nconsole.log('Evaluation response sample:', evaluationResponse ? evaluationResponse.substring(0, 100) : 'No response');\n\n// Parse evaluation JSON\ntry {\n  if (typeof evaluationResponse === 'string') {\n    // Try to extract JSON from markdown code blocks if present\n    const jsonMatch = evaluationResponse.match(/```json\\n(.*?)\\n```/s);\n    if (jsonMatch) {\n      evaluation = JSON.parse(jsonMatch[1]);\n    } else {\n      evaluation = JSON.parse(evaluationResponse);\n    }\n  } else {\n    evaluation = evaluationResponse;\n  }\n} catch (error) {\n  console.error('Failed to parse evaluation JSON:', error);\n  console.log('Raw response:', evaluationResponse);\n  \n  // Fallback: assume message needs regeneration\n  return [{\n    json: {\n      ...inputData,\n      quality_gate: {\n        passed: false,\n        overall_score: 6.0,\n        action: 'regenerate_improved',\n        reason: 'evaluation_parse_error',\n        error_details: error.message,\n        raw_response: evaluationResponse\n      }\n    }\n  }];\n}\n\nconsole.log('Parsed evaluation:', evaluation);\n\n// Quality gate logic\nconst overallScore = evaluation.overall_score || 6.0;\nconst minScoreThreshold = 7.5;\nconst criticalScores = {\n  personalization: evaluation.personalization_score || 6.0,\n  expertise: evaluation.expertise_level || 6.0,\n  tone: evaluation.tone_quality || 6.0\n};\n\n// Check if any critical scores are too low\nconst hasCriticalIssues = Object.values(criticalScores).some(score => score < 6.0);\n\n// Determine action based on scores\nlet qualityDecision = {\n  passed: false,\n  overall_score: overallScore,\n  action: 'regenerate_completely',\n  reason: 'low_overall_score'\n};\n\nif (hasCriticalIssues) {\n  qualityDecision = {\n    passed: false,\n    overall_score: overallScore,\n    action: 'regenerate_completely',\n    reason: 'critical_issues_detected',\n    critical_issues: Object.entries(criticalScores)\n      .filter(([key, score]) => score < 6.0)\n      .map(([key, score]) => ({ metric: key, score }))\n  };\n} else if (overallScore >= 8.0) {\n  qualityDecision = {\n    passed: true,\n    overall_score: overallScore,\n    action: 'send_immediately',\n    reason: 'excellent_quality'\n  };\n} else if (overallScore >= 7.5) {\n  qualityDecision = {\n    passed: true,\n    overall_score: overallScore,\n    action: 'send_with_confidence',\n    reason: 'good_quality'\n  };\n} else if (overallScore >= 6.5) {\n  qualityDecision = {\n    passed: false,\n    overall_score: overallScore,\n    action: 'regenerate_improved',\n    reason: 'needs_improvement'\n  };\n}\n\n// Add evaluation metadata\nconst result = {\n  ...inputData,\n  quality_evaluation: evaluation,\n  quality_gate: qualityDecision,\n  evaluation_timestamp: new Date().toISOString(),\n  processing_metadata: {\n    evaluation_source: inputData.evaluation_response ? 'previous_node' : 'mock_data',\n    critical_scores: criticalScores,\n    threshold_used: minScoreThreshold\n  }\n};\n\nconsole.log('Quality Gate Decision:', {\n  score: overallScore,\n  action: qualityDecision.action,\n  reason: qualityDecision.reason,\n  passed: qualityDecision.passed\n});\n\nreturn [{ json: result }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1112,
+        -180
+      ],
+      "id": "b891c0fb-3064-4089-89dd-7022b77aa1ab",
+      "name": "Quality Gate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function Node: Prepare Klaviyo Event Data (Messages & Scores Only)\nconst inputData = $input.first().json;\n\n// Extract essential data components\nconst customer = $(\"Enrich Data\").first()?.json.customer;\nconst finalMessage = $(\"AI Generate\").first()?.json.choices?.[0].message\nconst evaluation = inputData.quality_evaluation;\n\n// Create simplified Klaviyo event focusing only on messages and AI scores\nconst klaviyoEvent = {\n  data: {\n    type: 'event',\n    attributes: {\n      profile: {\n        data: {\n          type: \"profile\",\n          attributes: {\n            // ✅ Only essential profile fields\n            'email': customer.email,\n            'first_name': customer.first_name,\n            'last_name': customer.last_name\n          }\n        }\n      },\n      metric: {\n        data: {\n          type: \"metric\",\n          attributes: {\n            name: \"AI Abandoned Cart Recovery Message\"\n          }\n        }\n      },\n      properties: {\n        // ✅ MESSAGE DATA\n        'message_content': finalMessage.content,\n\n        // ✅ AI SCORE DATA\n        'ai_overall_score': evaluation.overall_score,\n        'ai_personalization_score': evaluation.personalization_score,\n        'ai_emotional_connection': evaluation.emotional_connection,\n        'ai_expertise_level': evaluation.expertise_level,\n        'ai_urgency_balance': evaluation.urgency_balance,\n        'ai_cta_strength': evaluation.cta_strength,\n        'ai_brand_consistency': evaluation.brand_consistency,\n        'ai_tone_quality': evaluation.tone_quality,\n        'ai_confidence_level': evaluation.confidence_level,\n        'ai_recommendation': evaluation.recommended_action,\n\n        // ✅ MINIMAL CONTEXT\n        'customer_id': customer.id,\n        'checkout_id': inputData.abandoned_cart?.id,\n        'cart_total': inputData.abandoned_cart?.total_price,\n        \n        // ✅ TECHNICAL METADATA\n        'processing_timestamp': new Date().toISOString()\n      }\n    }\n  }\n};\n\nconsole.log('Klaviyo event prepared - Messages & Scores only');\nconsole.log('AI Overall Score:', evaluation.overall_score);\nconsole.log('Customer Email:', customer.email);\n\nreturn [{ json: klaviyoEvent }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1332,
+        -180
+      ],
+      "id": "d5a4b074-ec08-4959-98e8-9db1d10f23f5",
+      "name": "Prepare Klaviyo"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.3,
+      "position": [
+        1772,
+        -180
+      ],
+      "id": "b50c6c05-f59d-4701-9e0a-23804b36c525",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Send to Klaviyo": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delay": {
+      "main": [
+        [
+          {
+            "node": "Validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate": {
+      "main": [
+        [
+          {
+            "node": "Get Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Customer": {
+      "main": [
+        [
+          {
+            "node": "Enrich Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich Data": {
+      "main": [
+        [
+          {
+            "node": "Prepare Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI Generate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Generate": {
+      "main": [
+        [
+          {
+            "node": "Prepare Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Evaluation": {
+      "main": [
+        [
+          {
+            "node": "AI Evaluate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Evaluate1": {
+      "main": [
+        [
+          {
+            "node": "Quality Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quality Gate": {
+      "main": [
+        [
+          {
+            "node": "Prepare Klaviyo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Klaviyo": {
+      "main": [
+        [
+          {
+            "node": "Send to Klaviyo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Kyiv",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 180
+  },
+  "versionId": "1923e646-c91c-4fe4-b77c-b002c8d968be",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4b357ca62a14b5eeb6ebb819fab8ed1a41ecbf567f5c0f742ca394bdf9476559"
+  },
+  "id": "eCu0EyvSOf1b1adg",
+  "tags": []
+}
