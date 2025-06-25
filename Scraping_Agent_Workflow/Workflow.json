@@ -1,0 +1,2428 @@
+{
+  "name": "Work-Maksym",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24e3cf28-feca-43e5-ab25-be8585daf1d6",
+              "name": "x-rapidapi-key",
+              "value": "0563c46af8mshb3b05db0ad5f5ecp10cb58jsnada44f0982a1",
+              "type": "string"
+            },
+            {
+              "id": "8486b437-3288-497b-b4c8-a81eed038158",
+              "name": "Person",
+              "value": "={{ $json['Person Name and Surname'] }}",
+              "type": "string"
+            },
+            {
+              "id": "e2e77053-6689-49fe-b962-63e6bdf1e2e5",
+              "name": "Company",
+              "value": "={{ $json.Company }}",
+              "type": "string"
+            },
+            {
+              "id": "1c3354e5-f363-4b2e-9cbd-3ffd4322c1f3",
+              "name": "LinkedIn",
+              "value": "={{ $json.Twitter }}",
+              "type": "string"
+            },
+            {
+              "id": "c3426bbf-162e-43e6-b9a8-918e1bb4a620",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1840,
+        3280
+      ],
+      "id": "fec986b9-8270-47ef-92df-d01b41814c5a",
+      "name": "Login"
+    },
+    {
+      "parameters": {
+        "url": "=https://email-social-scraper-turbo.p.rapidapi.com/SocialMail?domain={{ $json.domain }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "email-social-scraper-turbo.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -520,
+        2280
+      ],
+      "id": "2e38efcc-5d0c-4043-a783-a15fddc31d02",
+      "name": "Email Social Scraper Turbo (Company)",
+      "notes": "https://rapidapi.com/companies-databases-companies-databases-default/api/email-social-scraper-turbo/playground/apiendpoint_189f0932-7462-41aa-a735-78ca81f7de4a\n"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n    domain: $json.email_company.split('@')[1],\n  },\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -740,
+        2680
+      ],
+      "id": "9afc280c-4435-42e5-a71e-ec2f99a5974a",
+      "name": "Getting a company domain name"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://whois-api6.p.rapidapi.com/dns/api/v1/getRecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "whois-api6.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"query\":\"{{ $json.domain }}\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -520,
+        2480
+      ],
+      "id": "a729e3f5-e071-4725-bea7-c84e38bb7b31",
+      "name": "Whois API",
+      "notes": "https://rapidapi.com/HemKrishLabs/api/whois-api6/playground/apiendpoint_0fba31f0-d40e-4571-9fef-9d0c81f7e4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "82de8140-107b-4074-bf35-4f714f6ce685",
+              "name": "Person",
+              "value": "={{ $('Login').item.json.Person }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -300,
+        3080
+      ],
+      "id": "8d4c06ab-a34c-43e1-8720-b4a31b608fb0",
+      "name": "Person"
+    },
+    {
+      "parameters": {
+        "url": "=https://b2b-company-data-enrichment1.p.rapidapi.com/companies/enrich?domain={{ $json.domain }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "b2b-company-data-enrichment1.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -520,
+        2680
+      ],
+      "id": "75606809-9373-4b6b-a6e0-04dcd93d202d",
+      "name": "B2B Company Data Enrichment",
+      "notes": "https://rapidapi.com/stdio-ltd-stdio-ltd-default/api/b2b-company-data-enrichment1/playground/apiendpoint_3e94594d-1169-4e0b-add3-396ec8bb7786\n"
+    },
+    {
+      "parameters": {
+        "url": "=https://website-contacts-scraper.p.rapidapi.com/scrape-contacts?query={{ $json.domain }}&match_email_domain=false&external_matching=false",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "website-contacts-scraper.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -520,
+        2880
+      ],
+      "id": "49183924-0bd6-45f4-9199-b6acbbdb38bd",
+      "name": "Website Contacts Scraper",
+      "notes": "https://rapidapi.com/letscrape-6bRBa3QguO5/api/website-contacts-scraper/playground/apiendpoint_ee6b910e-3333-4dea-b4a2-0b21fe48427c"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  const person = item.json.Person || '';\n  const company = item.json.Company || '';\n  const combined = `${person}  ${company}`; // два пробіли між\n  const encoded = encodeURIComponent(combined);\n  item.json.encodedResult = encoded;\n}\nreturn $input.all();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1180,
+        3280
+      ],
+      "id": "f38ed2d4-95ee-43fc-9f8c-c2819f75f03b",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "url": "=https://linkedin-data-api.p.rapidapi.com/search-people?keywords={{ $json.encodedResult }}&start=0",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "linkedin-data-api.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -960,
+        3280
+      ],
+      "id": "c9af7551-da12-4697-8908-43fd2644562f",
+      "name": "Real-Time LinkedIn Scraper API (Person) Accurate LinkedIn profiles",
+      "notes": "https://rapidapi.com/companies-databases-companies-databases-default/api/email-social-scraper-turbo/playground/apiendpoint_189f0932-7462-41aa-a735-78ca81f7de4a\n"
+    },
+    {
+      "parameters": {
+        "url": "=https://linkedin-data-api.p.rapidapi.com/?username={{ $json.data.items[0].username }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "linkedin-data-api.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -740,
+        3280
+      ],
+      "id": "087f65ce-a80e-4163-a8eb-8d43d1619c0f",
+      "name": "LinkedIn Full profile information",
+      "notes": "https://rapidapi.com/rockapis-rockapis-default/api/linkedin-data-api/playground/apiendpoint_1d2ead16-5039-4883-ac25-390fa57edf94\n"
+    },
+    {
+      "parameters": {
+        "jsCode": "const url = $input.first().json.social_links.LinkedIn[0] || '';\nconst match = url.match(/linkedin\\.com\\/company\\/([^\\/?#]+)/i);\nconst companySlug = match ? match[1] : '';\n\nreturn [\n  {\n    json: {\n      companySlug: companySlug\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        2280
+      ],
+      "id": "fbc507b0-de96-4c42-aecd-13619c072b26",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "url": "=https://linkedin-data-api.p.rapidapi.com/get-company-details?username={{ $json.companySlug }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "linkedin-data-api.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        2280
+      ],
+      "id": "994b604a-21a6-4bd8-9988-5a8364330241",
+      "name": "LinkedIn All company details",
+      "notes": "https://rapidapi.com/rockapis-rockapis-default/api/linkedin-data-api/playground/apiendpoint_8390967f-830a-476f-ad57-5303d3cb4506"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://linkedin-data-api.p.rapidapi.com/get-company-employees-count",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "linkedin-data-api.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"companyId\":\"{{ $json.data.id }}\",\"locations\":[]}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        140,
+        2280
+      ],
+      "id": "b5861841-5f6e-4054-9e7c-43a659628903",
+      "name": "LinkedIn Number of employees in the company (possible filter by location)",
+      "notes": "https://rapidapi.com/rockapis-rockapis-default/api/linkedin-data-api/playground/apiendpoint_37311c0c-7ae0-4d62-8560-8be2469cdf5a"
+    },
+    {
+      "parameters": {
+        "url": "=https://google-search74.p.rapidapi.com/?query={{ $json.encodedEmail }}&limit=10&related_keywords=true",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "google-search74.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -960,
+        3680
+      ],
+      "id": "6cba1857-b87c-44a2-b627-28929feb8b84",
+      "name": "Google Search Person",
+      "notes": "https://rapidapi.com/herosAPI/api/google-search74/playground/apiendpoint_686fbd00-89fa-409e-ae73-c0c5321e32c5\n"
+    },
+    {
+      "parameters": {
+        "jsCode": "const person = $json.Person || '';\nconst email = $json.email_company || '';\nconst combined = `${person}  ${email}`; // два пробіли\n\nreturn {\n  json: {\n    encodedPerson: encodeURIComponent(person),\n    encodedEmail: encodeURIComponent(email),\n    encodedCombined: encodeURIComponent(combined)\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1180,
+        3780
+      ],
+      "id": "9ab5e80d-d9c1-42bb-8b9a-63404d759c1f",
+      "name": "encodeURI_person"
+    },
+    {
+      "parameters": {
+        "url": "=https://linkedin-data-api.p.rapidapi.com/get-profile-posts?username={{ $json.username }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "linkedin-data-api.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -520,
+        3280
+      ],
+      "id": "5d6896c1-6139-4b41-b07b-d8e73a325934",
+      "name": "LinkedIn Posts Person",
+      "notes": "https://rapidapi.com/rockapis-rockapis-default/api/linkedin-data-api/playground/apiendpoint_1d2ead16-5039-4883-ac25-390fa57edf94\n"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: {\n    encodedEmail: encodeURIComponent($input.first().json.data[0].author.url),\n  },\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        3280
+      ],
+      "id": "82270e6f-25cf-4164-9f82-853b32f1ce5b",
+      "name": "encodeURI_personURL"
+    },
+    {
+      "parameters": {
+        "url": "=https://linkedin-data-api.p.rapidapi.com/profiles/position-skills?username={{ $('LinkedIn Posts Person').item.json.data[0].author.username }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "linkedin-data-api.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        140,
+        3280
+      ],
+      "id": "471f4c8f-626f-4cce-bbd6-4537b59907a1",
+      "name": "LinkedIn Get Profile position with Skils",
+      "notes": "https://rapidapi.com/rockapis-rockapis-default/api/linkedin-data-api/playground/apiendpoint_39d2caed-34b1-4889-b8b4-8bcf7f73a46e"
+    },
+    {
+      "parameters": {
+        "url": "=https://social-links-search.p.rapidapi.com/search-social-links?query={{ $('encodeURI_person').item.json.encodedEmail }}&social_networks=facebook%2Ctiktok%2Cinstagram%2Csnapchat%2Ctwitter%2Cyoutube%2Clinkedin%2Cgithub%2Cpinterest",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "social-links-search.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -740,
+        3680
+      ],
+      "id": "35b49a2a-ab85-4aaf-a46c-bd4a254443bf",
+      "name": "Social Links Search Person1",
+      "notes": "https://rapidapi.com/letscrape-6bRBa3QguO5/api/social-links-search/playground/apiendpoint_fb6a5ab3-f1b8-4d28-9892-e1b137665e53"
+    },
+    {
+      "parameters": {
+        "url": "=https://reddit-com.p.rapidapi.com/search-people?query={{ $json.encodedEmail }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "reddit-com.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -960,
+        4080
+      ],
+      "id": "52d04d13-3e49-41fd-bf21-2f33274b9630",
+      "name": "Reddit COM",
+      "notes": "https://rapidapi.com/things4u-api4upro/api/reddit-com/playground/apiendpoint_e7e7d788-147e-4b10-a8a0-85c293f2fecb"
+    },
+    {
+      "parameters": {
+        "url": "=https://facebook-scraper3.p.rapidapi.com/search/pages?query={{ $json.encodedEmail }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "facebook-scraper3.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -740,
+        4280
+      ],
+      "id": "fd0f9374-5ff4-44bd-8652-8e54a219fc7a",
+      "name": "Facebook Scraper",
+      "notes": "https://rapidapi.com/krasnoludkolo/api/facebook-scraper3/playground/apiendpoint_6fc14979-9524-4671-8742-0fc6e8824a2a"
+    },
+    {
+      "parameters": {
+        "url": "=https://facebook-scraper3.p.rapidapi.com/search/pages?query=Elon%20Musk",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "facebook-scraper3.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -960,
+        3880
+      ],
+      "id": "02ec1ff5-b859-4239-ba52-1314caa77f77",
+      "name": "Facebook Scraper Elon Musk",
+      "notes": "https://rapidapi.com/krasnoludkolo/api/facebook-scraper3/playground/apiendpoint_6fc14979-9524-4671-8742-0fc6e8824a2a"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "54d0ff2a-16a9-49ff-81fb-9162e0edc24c"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Linkedin"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "596423d5-873e-4a06-bba4-eba22ddd1e27",
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "X"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8e3bce25-1261-4b24-b034-a4abe1024800",
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Other information"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "daceb232-39fe-4e58-8e3f-d3a363768f06",
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Reddit"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e88c0938-2c58-4e96-a716-e94007b6ccea",
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Facebook"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1400,
+        3738
+      ],
+      "id": "200146cd-ec08-48df-ae3f-f6b1551538d2",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0f1e9d68-bce6-4833-903f-0a39e2da638b",
+              "name": "profileInfo",
+              "value": "={{ $node[\"LinkedIn Full profile information\"].json }}",
+              "type": "object"
+            },
+            {
+              "id": "1c2dd224-d4d6-4870-aeda-4335072e38a9",
+              "name": "posts",
+              "value": "={{ $node[\"LinkedIn Posts Person\"].json.data }}",
+              "type": "array"
+            },
+            {
+              "id": "942cc718-b3a6-41e2-a20f-80c394632576",
+              "name": "articles",
+              "value": "={{ $node[\" LinkedIn_Get_user_Article\"].json.data }}",
+              "type": "object"
+            },
+            {
+              "id": "6bfb4fb4-59fe-452d-a602-c1d68d796aa0",
+              "name": "positionData",
+              "value": "={{ $node[\"LinkedIn Get Profile position with Skils\"].json.data.items }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        360,
+        3280
+      ],
+      "id": "38cfabd9-a218-4529-aab7-46283c07fe8e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "=https://linkedin-data-api.p.rapidapi.com/get-user-articles?url={{ $json.encodedEmail }}&username={{ $('LinkedIn Posts Person').item.json.data[0].author.username }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "linkedin-data-api.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        3280
+      ],
+      "id": "64071863-c0a1-4cac-b5b8-9bd2c3056e25",
+      "name": " LinkedIn_Get_user_Article",
+      "notes": "https://rapidapi.com/rockapis-rockapis-default/api/linkedin-data-api/playground/apiendpoint_c9aa2639-2ed1-4e9d-aa77-b3c780c83949"
+    },
+    {
+      "parameters": {
+        "jsCode": "const person = $input.first().json.Person || '';\nconst encoded = encodeURIComponent(person);\nreturn [{ json: { encodedPerson: encoded } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        3480
+      ],
+      "id": "3c710fc6-fd35-42f2-be38-f4b212e75108",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ba6a31fd-9e6d-4dce-aa92-0f598c15f337",
+              "name": "profile",
+              "value": "={{ $node[\"Twitter_Profile_search\"].json }}",
+              "type": "object"
+            },
+            {
+              "id": "5db68125-ed09-4c3a-879b-14087f5cb4ac",
+              "name": "replies",
+              "value": "={{ $node[\"Twitter_replies\"].json.timeline }}",
+              "type": "array"
+            },
+            {
+              "id": "f673c3d8-9f28-4b28-973d-6955466c4df5",
+              "name": "affiliates",
+              "value": "={{ $node[\"Twitter_affiliates\"].json.affilates || null }}",
+              "type": "array"
+            },
+            {
+              "id": "5d82eb3d-e773-4d63-9481-37beb5750b44",
+              "name": "followers",
+              "value": "={{ $node[\"Twitter_Followers\"].json.followers || null }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        140,
+        3480
+      ],
+      "id": "19208c57-c1bd-4133-bd18-2ac4e5cf8c84",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "url": "=https://twitter-api45.p.rapidapi.com/search.php?query={{ $json.encodedPerson }}&search_type=People",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "twitter-api45.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -740,
+        3480
+      ],
+      "id": "d1134289-4908-4596-8d95-ade8508a8753",
+      "name": "Twitter_Profile_search",
+      "notes": "https://rapidapi.com/alexanderxbx/api/twitter-api45/playground/apiendpoint_b4db8ee2-25bc-4743-934d-8b9b4e774bd7"
+    },
+    {
+      "parameters": {
+        "url": "=https://twitter-api45.p.rapidapi.com/followers.php?screenname={{ $json.timeline[0].screen_name }}&blue_verified=0",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "twitter-api45.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -520,
+        3480
+      ],
+      "id": "39c0a4c2-253d-4264-8d2a-66eccced536e",
+      "name": "Twitter_Followers",
+      "notes": "https://rapidapi.com/alexanderxbx/api/twitter-api45/playground/apiendpoint_6dc3064f-1d7e-4fc2-8dfc-8140bf82a015"
+    },
+    {
+      "parameters": {
+        "url": "=https://twitter-api45.p.rapidapi.com/affilates.php?screenname={{ $('Twitter_Profile_search').item.json.timeline[0].screen_name }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "twitter-api45.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -300,
+        3480
+      ],
+      "id": "6c679f2c-b780-417b-b387-0fa797e5f960",
+      "name": "Twitter_affiliates",
+      "notes": "https://rapidapi.com/alexanderxbx/api/twitter-api45/playground/apiendpoint_fd20eecf-2149-4fc4-93d8-b6501ceb9191"
+    },
+    {
+      "parameters": {
+        "url": "=https://twitter-api45.p.rapidapi.com/replies.php?screenname={{ $('Twitter_Profile_search').item.json.timeline[0].screen_name }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "twitter-api45.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        3480
+      ],
+      "id": "d8d5ed04-9957-4493-8225-c33867be72ce",
+      "name": "Twitter_replies",
+      "notes": "https://rapidapi.com/alexanderxbx/api/twitter-api45/playground/apiendpoint_734d189c-06d1-40a4-b279-157629276632"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: {\n    encodedEmail: encodeURIComponent($json.Person),\n  },\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1180,
+        4080
+      ],
+      "id": "68bd648c-b4b8-48c4-83d4-0cc6ce938b0b",
+      "name": "encodeURI_person1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: {\n    encodedEmail: encodeURIComponent($json.Person),\n  },\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        4280
+      ],
+      "id": "7f338965-1144-482d-81f9-2533bb219658",
+      "name": "encodeURI_person2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ba6a31fd-9e6d-4dce-aa92-0f598c15f337",
+              "name": "googleResults",
+              "value": "={{ $node[\"Google Search Person\"].json.results }}",
+              "type": "array"
+            },
+            {
+              "id": "f673c3d8-9f28-4b28-973d-6955466c4df5",
+              "name": "emailVerification",
+              "value": "={{ $node[\"Email_Verifier1\"].json }}",
+              "type": "object"
+            },
+            {
+              "id": "5d82eb3d-e773-4d63-9481-37beb5750b44",
+              "name": "socialLinks",
+              "value": "={{ $node[\"Social Links Search Person1\"].json.data }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -300,
+        3680
+      ],
+      "id": "d52608de-f9d3-4199-9bc1-bcd4e48c8a56",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "url": "=https://email-verifier15.p.rapidapi.com/verify-email?email={{ $('encodeURI_person').item.json.encodedEmail }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "email-verifier15.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $('Login').item.json['x-rapidapi-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -520,
+        3680
+      ],
+      "id": "9ded5990-a3b7-44ce-b4dc-d15475d98488",
+      "name": "Email_Verifier1",
+      "notes": "https://rapidapi.com/loopcrunch-loopcrunch-default/api/email-verifier15/playground/apiendpoint_581f83da-4a90-49b7-b49d-c79169dcdf13\n"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ba6a31fd-9e6d-4dce-aa92-0f598c15f337",
+              "name": "Redit",
+              "value": "={{ $json.data }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -740,
+        4080
+      ],
+      "id": "ddc01b40-382a-42b1-8f36-f117589ee4c0",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0f1e9d68-bce6-4833-903f-0a39e2da638b",
+              "name": "Linkrdin_company_profileInfo",
+              "value": "={{ $('LinkedIn All company details').item.json.data }}",
+              "type": "object"
+            },
+            {
+              "id": "1c2dd224-d4d6-4870-aeda-4335072e38a9",
+              "name": "Linkrdin_company_employers",
+              "value": "={{ $json.data }}",
+              "type": "object"
+            },
+            {
+              "id": "942cc718-b3a6-41e2-a20f-80c394632576",
+              "name": "Email_scrapper_company",
+              "value": "={{ { \"emails\": $('Email Social Scraper Turbo (Company)').item.json.emails } }}",
+              "type": "object"
+            },
+            {
+              "id": "6bfb4fb4-59fe-452d-a602-c1d68d796aa0",
+              "name": "Email_scrapper_company_social_link",
+              "value": "={{ $('Email Social Scraper Turbo (Company)').item.json.social_links }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        360,
+        2280
+      ],
+      "id": "71de4f37-65dc-4bd9-994c-01c9f0211fd5",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        580,
+        3380
+      ],
+      "id": "8defefde-89a4-44dc-adf8-0f87708c79a4",
+      "name": "Merge"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -300,
+        4180
+      ],
+      "id": "aa3f88de-6b4d-42e3-8822-0f9e33dc0639",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        140,
+        3980
+      ],
+      "id": "6224ac44-c2c6-4d4e-9913-24e145e0b47e",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        800,
+        3780
+      ],
+      "id": "ef8eda91-bf81-44b0-9e3a-e13faf7448da",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        800,
+        2680
+      ],
+      "id": "cb2ef123-cd57-42ac-b2df-a46358675eab",
+      "name": "Merge4"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        580,
+        2280
+      ],
+      "id": "2e80decc-2ba0-47b3-a076-e8a2502c63a5",
+      "name": "Merge5"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -80,
+        2580
+      ],
+      "id": "6cbca621-ee52-4c8f-9bae-4739599d89cc",
+      "name": "Merge6"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -80,
+        2980
+      ],
+      "id": "8c2fd2b1-7e39-452b-accb-97635a6381a2",
+      "name": "Merge7"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        140,
+        2780
+      ],
+      "id": "6a6ac2af-8d3e-488d-a9a8-1aa833e3b7e6",
+      "name": "Merge8"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1020,
+        3280
+      ],
+      "id": "6bf43cf9-d361-46c6-824d-770fbc6808bc",
+      "name": "Merge10"
+    },
+    {
+      "parameters": {
+        "tableId": "projects",
+        "dataToSend": "autoMapInputData"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1460,
+        3280
+      ],
+      "id": "a711e6ae-db49-4ce1-851a-6716d43d43b8",
+      "name": "Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fFEr8ZCxSHgk7PTc",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// N8N Code Node to process complex data for Supabase insertion\n// This assumes your input data is in $input.all()[0].json or modify as needed\n\nconst inputData = $input.all()[0].json; // Adjust based on your input structure\n\n// Helper function to safely extract values\nfunction safeExtract(obj, path, defaultValue = null) {\n  try {\n    return path.split('.').reduce((current, key) => {\n      if (current === null || current === undefined) return defaultValue;\n      return current[key];\n    }, obj) || defaultValue;\n  } catch (error) {\n    return defaultValue;\n  }\n}\n\n// Helper function to convert arrays to JSON string\nfunction arrayToJson(arr) {\n  if (!Array.isArray(arr)) return null;\n  return JSON.stringify(arr);\n}\n\n// Helper function to convert objects to JSON string\nfunction objectToJson(obj) {\n  if (typeof obj !== 'object' || obj === null) return null;\n  return JSON.stringify(obj);\n}\n\n// Process each item in the input array\nconst processedData = [];\n\nif (Array.isArray(inputData)) {\n  inputData.forEach((item, index) => {\n    const processedItem = {\n      // Basic identification\n      item_index: index,\n      \n      // DNS Records (from first object)\n      domain: safeExtract(item, 'result.domain') || safeExtract(item, 'domain'),\n      dns_records: objectToJson(safeExtract(item, 'result.records')),\n      dns_a_records: arrayToJson(safeExtract(item, 'result.records.A')),\n      dns_mx_records: objectToJson(safeExtract(item, 'result.records.MX')),\n      dns_ns_records: arrayToJson(safeExtract(item, 'result.records.NS')),\n      dns_soa_records: objectToJson(safeExtract(item, 'result.records.SOA')),\n      dns_txt_records: arrayToJson(safeExtract(item, 'result.records.TXT')),\n      \n      // Company Information\n      id: safeExtract(item, 'id'),\n      name: safeExtract(item, 'name'),\n      website: safeExtract(item, 'website'),\n      type: safeExtract(item, 'type'),\n      industry: safeExtract(item, 'industry'),\n      industries: arrayToJson(safeExtract(item, 'industries')),\n      categories: arrayToJson(safeExtract(item, 'categories')),\n      employees: safeExtract(item, 'employees'),\n      revenue: safeExtract(item, 'revenue'),\n      description: safeExtract(item, 'description'),\n      keywords: arrayToJson(safeExtract(item, 'keywords')),\n      technologies: arrayToJson(safeExtract(item, 'technologies')),\n      subsidiaries: safeExtract(item, 'subsidiaries'),\n      founded_year: safeExtract(item, 'founded_year'),\n      naics_codes: arrayToJson(safeExtract(item, 'naics_codes')),\n      \n      // Location Information\n      location: objectToJson(safeExtract(item, 'location')),\n      location_country_code: safeExtract(item, 'location.country.code'),\n      location_country_name: safeExtract(item, 'location.country.name'),\n      location_state_name: safeExtract(item, 'location.state.name'),\n      location_city_name: safeExtract(item, 'location.city.name'),\n      location_address: safeExtract(item, 'location.address'),\n      location_phone: safeExtract(item, 'location.phone'),\n      \n      // Financial Information\n      financial: objectToJson(safeExtract(item, 'financial')),\n      stock_symbol: safeExtract(item, 'financial.stock_symbol'),\n      total_funding: safeExtract(item, 'financial.total_funding'),\n      \n      // Social Media\n      socials: objectToJson(safeExtract(item, 'socials')),\n      linkedin_url: safeExtract(item, 'socials.linkedin_url'),\n      twitter_url: safeExtract(item, 'socials.twitter_url'),\n      facebook_url: safeExtract(item, 'socials.facebook_url'),\n      instagram_url: safeExtract(item, 'socials.instagram_url'),\n      \n      // SEO and Marketing\n      page_rank: safeExtract(item, 'page_rank'),\n      logo_url: safeExtract(item, 'logo_url'),\n      seo_description: safeExtract(item, 'seo_description'),\n      \n      // API Response Data\n      status: safeExtract(item, 'status'),\n      request_id: safeExtract(item, 'request_id'),\n      data: objectToJson(safeExtract(item, 'data')),\n      \n      // Person Information\n      person: safeExtract(item, 'Person'),\n      \n      // API Keys and Technical Data\n      x_rapidapi_key: safeExtract(item, 'x-rapidapi-key'),\n      email_company: safeExtract(item, 'email_company'),\n      company: safeExtract(item, 'Company'),\n      twitter: safeExtract(item, 'Twitter'),\n      encoded_result: safeExtract(item, 'encodedResult'),\n      \n      // Timeline and Social Data\n      timeline: arrayToJson(safeExtract(item, 'timeline')),\n      next_cursor: safeExtract(item, 'next_cursor'),\n      prev_cursor: safeExtract(item, 'prev_cursor'),\n      \n      // User Profile Data\n      user: objectToJson(safeExtract(item, 'user')),\n      user_id: safeExtract(item, 'user.id') || safeExtract(item, 'user.rest_id'),\n      user_name: safeExtract(item, 'user.name'),\n      user_screen_name: safeExtract(item, 'user.profile'),\n      user_avatar: safeExtract(item, 'user.avatar'),\n      user_followers: safeExtract(item, 'user.friends'),\n      user_created_at: safeExtract(item, 'user.created_at'),\n      \n      // Profile Information\n      profile: objectToJson(safeExtract(item, 'profile')),\n      profile_timeline: arrayToJson(safeExtract(item, 'profile.timeline')),\n      \n      // Social Network Data\n      replies: arrayToJson(safeExtract(item, 'replies')),\n      affiliates: arrayToJson(safeExtract(item, 'affiliates')),\n      followers: arrayToJson(safeExtract(item, 'followers')),\n      \n      // Schema and Validation\n      properties: objectToJson(safeExtract(item, 'properties')),\n      \n      // Google Results\n      google_results: arrayToJson(safeExtract(item, 'googleResults')),\n      \n      // Email Validation\n      email_verification: objectToJson(safeExtract(item, 'emailVerification')),\n      \n      // Social Links\n      social_links: objectToJson(safeExtract(item, 'socialLinks')),\n      social_facebook: arrayToJson(safeExtract(item, 'socialLinks.facebook')),\n      social_linkedin: arrayToJson(safeExtract(item, 'socialLinks.linkedin')),\n      social_twitter: arrayToJson(safeExtract(item, 'socialLinks.twitter')),\n      \n      // Additional Status and Meta\n      message: safeExtract(item, 'message'),\n      meta: objectToJson(safeExtract(item, 'meta')),\n      \n      // Reddit Data\n      reddit_data: arrayToJson(safeExtract(item, 'Redit')),\n      reddit_users: safeExtract(item, 'data') ? \n        arrayToJson(safeExtract(item, 'data').filter(user => user.__typename === 'Redditor')) : null,\n      \n      // Contact Information (from email data)\n      emails: safeExtract(item, 'data.0.emails') ? \n        arrayToJson(safeExtract(item, 'data.0.emails')) : null,\n      phone_numbers: safeExtract(item, 'data.0.phone_numbers') ? \n        arrayToJson(safeExtract(item, 'data.0.phone_numbers')) : null,\n      \n      // Timestamps\n      created_at: new Date().toISOString(),\n      updated_at: new Date().toISOString()\n    };\n    \n    processedData.push(processedItem);\n  });\n} else {\n  // Handle single object input\n  const processedItem = {\n    // Basic identification\n    item_index: 0,\n    \n    // DNS Records\n    domain: safeExtract(inputData, 'result.domain') || safeExtract(inputData, 'domain'),\n    dns_records: objectToJson(safeExtract(inputData, 'result.records')),\n    dns_a_records: arrayToJson(safeExtract(inputData, 'result.records.A')),\n    dns_mx_records: objectToJson(safeExtract(inputData, 'result.records.MX')),\n    dns_ns_records: arrayToJson(safeExtract(inputData, 'result.records.NS')),\n    dns_soa_records: objectToJson(safeExtract(inputData, 'result.records.SOA')),\n    dns_txt_records: arrayToJson(safeExtract(inputData, 'result.records.TXT')),\n    \n    // Company Information\n    id: safeExtract(inputData, 'id'),\n    name: safeExtract(inputData, 'name'),\n    website: safeExtract(inputData, 'website'),\n    type: safeExtract(inputData, 'type'),\n    industry: safeExtract(inputData, 'industry'),\n    industries: arrayToJson(safeExtract(inputData, 'industries')),\n    categories: arrayToJson(safeExtract(inputData, 'categories')),\n    employees: safeExtract(inputData, 'employees'),\n    revenue: safeExtract(inputData, 'revenue'),\n    description: safeExtract(inputData, 'description'),\n    keywords: arrayToJson(safeExtract(inputData, 'keywords')),\n    technologies: arrayToJson(safeExtract(inputData, 'technologies')),\n    subsidiaries: safeExtract(inputData, 'subsidiaries'),\n    founded_year: safeExtract(inputData, 'founded_year'),\n    naics_codes: arrayToJson(safeExtract(inputData, 'naics_codes')),\n    \n    // Location Information\n    location: objectToJson(safeExtract(inputData, 'location')),\n    location_country_code: safeExtract(inputData, 'location.country.code'),\n    location_country_name: safeExtract(inputData, 'location.country.name'),\n    location_state_name: safeExtract(inputData, 'location.state.name'),\n    location_city_name: safeExtract(inputData, 'location.city.name'),\n    location_address: safeExtract(inputData, 'location.address'),\n    location_phone: safeExtract(inputData, 'location.phone'),\n    \n    // Financial Information\n    financial: objectToJson(safeExtract(inputData, 'financial')),\n    stock_symbol: safeExtract(inputData, 'financial.stock_symbol'),\n    total_funding: safeExtract(inputData, 'financial.total_funding'),\n    \n    // Social Media\n    socials: objectToJson(safeExtract(inputData, 'socials')),\n    linkedin_url: safeExtract(inputData, 'socials.linkedin_url'),\n    twitter_url: safeExtract(inputData, 'socials.twitter_url'),\n    facebook_url: safeExtract(inputData, 'socials.facebook_url'),\n    instagram_url: safeExtract(inputData, 'socials.instagram_url'),\n    \n    // SEO and Marketing\n    page_rank: safeExtract(inputData, 'page_rank'),\n    logo_url: safeExtract(inputData, 'logo_url'),\n    seo_description: safeExtract(inputData, 'seo_description'),\n    \n    // API Response Data\n    status: safeExtract(inputData, 'status'),\n    request_id: safeExtract(inputData, 'request_id'),\n    data: objectToJson(safeExtract(inputData, 'data')),\n    \n    // Person Information\n    person: safeExtract(inputData, 'Person'),\n    \n    // API Keys and Technical Data\n    x_rapidapi_key: safeExtract(inputData, 'x-rapidapi-key'),\n    email_company: safeExtract(inputData, 'email_company'),\n    company: safeExtract(inputData, 'Company'),\n    twitter: safeExtract(inputData, 'Twitter'),\n    encoded_result: safeExtract(inputData, 'encodedResult'),\n    \n    // Timeline and Social Data\n    timeline: arrayToJson(safeExtract(inputData, 'timeline')),\n    next_cursor: safeExtract(inputData, 'next_cursor'),\n    prev_cursor: safeExtract(inputData, 'prev_cursor'),\n    \n    // User Profile Data\n    user: objectToJson(safeExtract(inputData, 'user')),\n    user_id: safeExtract(inputData, 'user.id') || safeExtract(inputData, 'user.rest_id'),\n    user_name: safeExtract(inputData, 'user.name'),\n    user_screen_name: safeExtract(inputData, 'user.profile'),\n    user_avatar: safeExtract(inputData, 'user.avatar'),\n    user_followers: safeExtract(inputData, 'user.friends'),\n    user_created_at: safeExtract(inputData, 'user.created_at'),\n    \n    // Profile Information\n    profile: objectToJson(safeExtract(inputData, 'profile')),\n    profile_timeline: arrayToJson(safeExtract(inputData, 'profile.timeline')),\n    \n    // Social Network Data\n    replies: arrayToJson(safeExtract(inputData, 'replies')),\n    affiliates: arrayToJson(safeExtract(inputData, 'affiliates')),\n    followers: arrayToJson(safeExtract(inputData, 'followers')),\n    \n    // Schema and Validation\n    properties: objectToJson(safeExtract(inputData, 'properties')),\n    \n    // Google Results\n    google_results: arrayToJson(safeExtract(inputData, 'googleResults')),\n    \n    // Email Validation\n    email_verification: objectToJson(safeExtract(inputData, 'emailVerification')),\n    \n    // Social Links\n    social_links: objectToJson(safeExtract(inputData, 'socialLinks')),\n    social_facebook: arrayToJson(safeExtract(inputData, 'socialLinks.facebook')),\n    social_linkedin: arrayToJson(safeExtract(inputData, 'socialLinks.linkedin')),\n    social_twitter: arrayToJson(safeExtract(inputData, 'socialLinks.twitter')),\n    \n    // Additional Status and Meta\n    message: safeExtract(inputData, 'message'),\n    meta: objectToJson(safeExtract(inputData, 'meta')),\n    \n    // Reddit Data\n    reddit_data: arrayToJson(safeExtract(inputData, 'Redit')),\n    reddit_users: safeExtract(inputData, 'data') ? \n      arrayToJson(safeExtract(inputData, 'data').filter(user => user.__typename === 'Redditor')) : null,\n    \n    // Contact Information\n    emails: safeExtract(inputData, 'data.0.emails') ? \n      arrayToJson(safeExtract(inputData, 'data.0.emails')) : null,\n    phone_numbers: safeExtract(inputData, 'data.0.phone_numbers') ? \n      arrayToJson(safeExtract(inputData, 'data.0.phone_numbers')) : null,\n    \n    // Timestamps\n    created_at: new Date().toISOString(),\n    updated_at: new Date().toISOString()\n  };\n  \n  processedData.push(processedItem);\n}\n\n// Return the processed data for Supabase\nreturn processedData.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1240,
+        3280
+      ],
+      "id": "bda5a319-f835-44aa-9f91-85e01581b6ad",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "tableId": "Research_index",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $json.submittedAt }}"
+            },
+            {
+              "fieldId": "Email",
+              "fieldValue": "={{ $json.body.Email }}"
+            },
+            {
+              "fieldId": "Company",
+              "fieldValue": "={{ $json.body.Company }}"
+            },
+            {
+              "fieldId": "Person Name and Surname",
+              "fieldValue": "={{ $json.body[\"Person Name and Surname\"] }}"
+            },
+            {
+              "fieldId": "Twitter",
+              "fieldValue": "={{ $json.body.LinkedIn_URL }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2080,
+        3280
+      ],
+      "id": "72065bba-3446-4481-8cda-32e3d9b889ee",
+      "name": "Supabase1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fFEr8ZCxSHgk7PTc",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "Research_index",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "ID_Num",
+              "condition": "eq",
+              "keyValue": "={{ $('Supabase1').item.json.ID_Num }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "Whois API",
+              "fieldValue": "={{ $json.result }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -300,
+        2480
+      ],
+      "id": "1c373e90-c52e-4f75-97c1-1ba11ab6c3d0",
+      "name": "Supabase2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fFEr8ZCxSHgk7PTc",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "Research_index",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "ID_Num",
+              "condition": "eq",
+              "keyValue": "={{ $('Supabase1').item.json.ID_Num }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "B2B Company Data Enrichment",
+              "fieldValue": "={{ $json }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -300,
+        2680
+      ],
+      "id": "9228f9bb-38eb-4889-a48b-69082bfaa41f",
+      "name": "Supabase3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fFEr8ZCxSHgk7PTc",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "Research_index",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "ID_Num",
+              "condition": "eq",
+              "keyValue": "={{ $('Supabase1').item.json.ID_Num }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "Website Contacts Scraper",
+              "fieldValue": "={{ $json }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -300,
+        2880
+      ],
+      "id": "f80e0ec5-2089-4433-8ff7-72ee85e40646",
+      "name": "Supabase4",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fFEr8ZCxSHgk7PTc",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "Research_index",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "ID_Num",
+              "condition": "eq",
+              "keyValue": "={{ $('Supabase1').item.json.ID_Num }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "twitter",
+              "fieldValue": "={{ $json }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        360,
+        3480
+      ],
+      "id": "cc08912d-aae4-4aaa-b91f-09491a11c857",
+      "name": "Supabase5",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fFEr8ZCxSHgk7PTc",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "Research_index",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "ID_Num",
+              "condition": "eq",
+              "keyValue": "={{ $('Supabase1').item.json.ID_Num }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "google_search",
+              "fieldValue": "={{ $json }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        3680
+      ],
+      "id": "74a442d0-b1b1-4f54-aeba-8f1492ba68fa",
+      "name": "Supabase6",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fFEr8ZCxSHgk7PTc",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "Research_index",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "ID_Num",
+              "condition": "eq",
+              "keyValue": "={{ $('Supabase1').item.json.ID_Num }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "search_people",
+              "fieldValue": "={{ $json }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -520,
+        4080
+      ],
+      "id": "0e58d55e-61b1-4991-acb0-83fcd3474d5e",
+      "name": "Supabase7",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fFEr8ZCxSHgk7PTc",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "Research_index",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "ID_Num",
+              "condition": "eq",
+              "keyValue": "={{ $('Supabase1').item.json.ID_Num }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "facebook",
+              "fieldValue": "={{ $json }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -520,
+        4280
+      ],
+      "id": "b25e9f66-9285-4caa-8247-011884d50dbe",
+      "name": "Supabase8",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fFEr8ZCxSHgk7PTc",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "40f6e2d0-0882-4405-8582-aa5e4f5304f9",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2280,
+        3280
+      ],
+      "id": "e8d07bb9-785a-4614-8490-6cbf0f79e4ec",
+      "name": "Webhook",
+      "webhookId": "40f6e2d0-0882-4405-8582-aa5e4f5304f9"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1680,
+        3280
+      ],
+      "id": "76a5f90f-3cb0-4bbc-9c1d-1debbd9b3d89",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {
+    "Facebook Scraper Elon Musk": [
+      {
+        "json": {
+          "results": [
+            {
+              "type": "page",
+              "profile_url": "https://www.facebook.com/people/Elon-musk/61575239386158/",
+              "url": "https://www.facebook.com/people/Elon-musk/61575239386158/",
+              "image": {
+                "uri": "https://scontent-gru1-1.xx.fbcdn.net/v/t39.30808-1/493312618_122106771518841312_1849869971155344223_n.png?stp=dst-png_s120x120&_nc_cat=101&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=7FPrKIQ2zbEQ7kNvwHJS0xG&_nc_oc=AdlQpGM8ydW4TnKJ_HMCzytWz4SlveyXW1UtIUzUEu5kx1Bz33nThofzvdwpB-FX8TQ&_nc_zt=24&_nc_ht=scontent-gru1-1.xx&_nc_gid=xBbGdtANa0GMRyba0U5B8w&oh=00_AfOx4KpeapUr5jLUzwaXWImVNQZcqTYjSjrDtEMr78OytQ&oe=6848B568",
+                "width": 120,
+                "height": 120,
+                "scale": 2
+              },
+              "name": "Elon musk",
+              "facebook_id": "61575239386158",
+              "is_verified": false
+            },
+            {
+              "type": "page",
+              "profile_url": "https://www.facebook.com/people/Elon-musk/61576031832254/",
+              "url": "https://www.facebook.com/people/Elon-musk/61576031832254/",
+              "image": {
+                "uri": "https://scontent-gru1-1.xx.fbcdn.net/v/t39.30808-1/495110310_122103761066867727_841376829480861231_n.png?stp=dst-png_s120x120&_nc_cat=104&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=ggPQsEZWzBkQ7kNvwG11Yzn&_nc_oc=AdmDo5yQV1dkUh_lZRUyYpgFPHSh5SbVTtKPAySed3h42MetmfoKwlfLvo9eVIGUpFQ&_nc_zt=24&_nc_ht=scontent-gru1-1.xx&_nc_gid=xBbGdtANa0GMRyba0U5B8w&oh=00_AfMTls27F-0uNl4p1RItPqnJa-6q8uozYsUIr76Hys5Ldg&oe=6848AC8A",
+                "width": 120,
+                "height": 120,
+                "scale": 2
+              },
+              "name": "Elon musk",
+              "facebook_id": "61576031832254",
+              "is_verified": false
+            },
+            {
+              "type": "page",
+              "profile_url": "https://www.facebook.com/people/Elon-Musk/61576569631900/",
+              "url": "https://www.facebook.com/people/Elon-Musk/61576569631900/",
+              "image": {
+                "uri": "https://scontent-gru2-2.xx.fbcdn.net/v/t39.30808-1/499955234_122098644446885654_6504589775688723042_n.png?stp=dst-png_s120x120&_nc_cat=102&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=jYxCc9ySqO4Q7kNvwH_Lc1E&_nc_oc=Adnw0CM01zvk_Rqey3wUWG1atGUfdQbWdztX-yyU3yz29Ppk0UfHT9AIikEpCHBtXSs&_nc_zt=24&_nc_ht=scontent-gru2-2.xx&_nc_gid=xBbGdtANa0GMRyba0U5B8w&oh=00_AfOpzeRV7dTUzKDfcNxkUQFHDS4avbaEa7uXhtHlTY1DyQ&oe=68488DEF",
+                "width": 120,
+                "height": 120,
+                "scale": 2
+              },
+              "name": "Elon Musk",
+              "facebook_id": "61576569631900",
+              "is_verified": false
+            },
+            {
+              "type": "page",
+              "profile_url": "https://www.facebook.com/people/Elon-musk/61573451685379/",
+              "url": "https://www.facebook.com/people/Elon-musk/61573451685379/",
+              "image": {
+                "uri": "https://scontent-gru2-1.xx.fbcdn.net/v/t39.30808-1/481126224_122106520442781722_4532092397152209214_n.png?stp=dst-png_s120x120&_nc_cat=109&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=TsoucFJWXTkQ7kNvwE-jsM-&_nc_oc=Adnchsa2GQzeFZMCvfXIUEHzKRp6lckzvaD27uL4IPbUB_r3y2j8ZQOC6qN8uEkPBt8&_nc_zt=24&_nc_ht=scontent-gru2-1.xx&_nc_gid=xBbGdtANa0GMRyba0U5B8w&oh=00_AfOlfBdIovtpsuE38xB_JuTjkgS6ViSkev8Yzu2ZEOWSwg&oe=68488870",
+                "width": 120,
+                "height": 120,
+                "scale": 2
+              },
+              "name": "Elon musk",
+              "facebook_id": "61573451685379",
+              "is_verified": false
+            },
+            {
+              "type": "page",
+              "profile_url": "https://www.facebook.com/people/Elon-Musk/61575080788464/",
+              "url": "https://www.facebook.com/people/Elon-Musk/61575080788464/",
+              "image": {
+                "uri": "https://scontent-gru1-1.xx.fbcdn.net/v/t39.30808-1/489885279_122096509238836026_4014407591107221804_n.png?stp=dst-png_s120x120&_nc_cat=104&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=hI5GO9dZBS0Q7kNvwFU_o71&_nc_oc=AdmCRLPp8p6Ab5RhG51X30KxNgPfF5slwd6Kct6bQKZGF0tmlaZbsYjmG0Sc5fP6Inw&_nc_zt=24&_nc_ht=scontent-gru1-1.xx&_nc_gid=xBbGdtANa0GMRyba0U5B8w&oh=00_AfM-cCPfMO-WHDhZAbXFjaWK-CLzAfCelb5J8RsntvzHjA&oe=68489382",
+                "width": 120,
+                "height": 120,
+                "scale": 2
+              },
+              "name": "Elon Musk",
+              "facebook_id": "61575080788464",
+              "is_verified": false
+            },
+            {
+              "type": "page",
+              "profile_url": "https://www.facebook.com/people/Elon-Musk/61574142878619/",
+              "url": "https://www.facebook.com/people/Elon-Musk/61574142878619/",
+              "image": {
+                "uri": "https://scontent-gru2-1.xx.fbcdn.net/v/t39.30808-1/485312977_122105949686804762_7474083008505523080_n.png?stp=dst-png_s120x120&_nc_cat=109&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=uYL23VmAS_QQ7kNvwGFA_cr&_nc_oc=AdlCQkOrCIt97mN5aXItdTh-7jmg_xEK4VWDTya3F-sHuoFln4YDJY4zvXuY7G3GDII&_nc_zt=24&_nc_ht=scontent-gru2-1.xx&_nc_gid=xBbGdtANa0GMRyba0U5B8w&oh=00_AfM2f9aAZJKULcAEVzzRPrER9hn78wV1FphREvUM9ltGDA&oe=68488610",
+                "width": 120,
+                "height": 120,
+                "scale": 2
+              },
+              "name": "Elon Musk",
+              "facebook_id": "61574142878619",
+              "is_verified": false
+            },
+            {
+              "type": "page",
+              "profile_url": "https://www.facebook.com/people/Elon-Musk/61575867339777/",
+              "url": "https://www.facebook.com/people/Elon-Musk/61575867339777/",
+              "image": {
+                "uri": "https://scontent-gru1-2.xx.fbcdn.net/v/t39.30808-1/495440811_122102450024862244_1480167722044319906_n.png?stp=dst-png_s120x120&_nc_cat=100&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=dMWVfk2x9kgQ7kNvwGg9zcg&_nc_oc=Adm0DovPujJ1twvKqqqzKbr5XUgF7YpEFFHeEt3yCSZ56-IO7crJvMWfC_XKlLEEnPA&_nc_zt=24&_nc_ht=scontent-gru1-2.xx&_nc_gid=xBbGdtANa0GMRyba0U5B8w&oh=00_AfPBs59XTtui14OATEazcroFZLn2Fj9sA1h5yLkeLm7jIg&oe=68488F4E",
+                "width": 120,
+                "height": 120,
+                "scale": 2
+              },
+              "name": "Elon Musk",
+              "facebook_id": "61575867339777",
+              "is_verified": false
+            }
+          ],
+          "cursor": "AboUXwWrdDUzT3enKJdA_SzxfaRcO4EC0kXKDDIZG-iY3XFfCXVwBQkc5zFGFv4jgu_ywLMfrRDjRtWZcx4W66Xt9cqAYRuvoEmEJuf6nSfIDygjIuf3zRc66uGw4r-o86I2yWaBSrPORaPjuRKYM8JaeAuWYrpGJ3Za_5-BlDutnoQBDY-xjDBb84Pnm6kck2B8C9HUANk9E8-dYnP0l8nQoOPhItzuMVVLCkQpIqJ7TxG9XUb8Pxqf_7eiSuKwYhHOpWrbrUbIT8u8Lj1JhXaGPJyEvEJ-CxQh-N3HiW2eH1WiGQN88ARete1kBDSgX90kNWOxfLhqjzwNlQ2WKm8VkGpXCjV4teyPueCAjDp2y9rXDVv0nMxtcOsjzHn7HHPLfB06X0qY6OCe1xbzCiFrwEfgQWN3UMIA4ZP4O8EWwd_fHTTZ1XqtbguWeV78Vo25r1BqFIL7w1P4p-woTXo0w6gVYwsdSB7HZaPMBbXT9Q5g0n2lfh1aYf4uNsSlEZSC7aWILhWV6puzSbmT7ZxchsxIB5DepCfsbFnDBh8zn9g4ZOT3EIfimJBrKsE6FAUQc3rVP7whSmOAKb25lS8hXgRARs2vhWi6OUGeKv3ZBZ3c2wQ-37zfR1bWFFkiGf7p9ErK7PVKGlDNhY0JK1IPwyhk2oLu6ZUlf0WUAqLZ-cbS_9-f4D-D97wj7NTgwOIB0pi9Y9ap1oin8K72L7crt5Z61xq0hJO5CYMcWX-8uUtGc8UK9cZk5L9mWIXyWsKUwboF3zWA_zeGX_rI_ida44SuG9lYSjFMz_DDEPQv1p60pueNpE0VLBFvxnTm3HrL9V5D-G1RuVlC91TKTLU831uzq4xHpxJ6_dGG3H0ToiXHYzFtbjW7zh4fs87J1va8IVwFLYoGflMRqG4LkWcoXyXnqLQOoa2tN0RcGpMmBqDSekvB_HXBLSdltpji-q2q_IHeL4Rs8oHsnXye3eCRWV5swlH9ggL7z_eeCmNWnL_fD13U53Y189H7V9cGSP4atX2bPvGVKp5KY5kHRKUvNk_VzgkP_GW0_SBwjXND8q4jQVemX5HGa_LO9VRlH5aDaFNphWeNfIIXGkCD_YAoOgGKXpQdIzcKhqf4LozP-JZbDvZIjE_fN082ZyjUdZtfRQmc88kacLnR-N7EWA5iDlrBcDPCHzacf9csMNAi7-rRF7nHhtP5ROl9MuI60xB_ianUXcAGtx5ItbFeGhyFmWJpsUn5AJ0kaLWBAQDMHBk1PJeH2jRx3RxHnJxhfBbBC53aCI7oT-Te_aHKXsWZz3v4DWtfYVAAoaykHEMqxh861szRJfhPwfw8N_brGphOy0DAqoDse6hC_jYr6ozWI6y2Gz--1poGwiT33eptyO-oE0K_tFSLfukA6ljjroeoaq9KUFLJz4rwbEzaJ0eCbcerXzDMiG8Ok8k5NV9sZbu26raN4qvJY-yfeCLURw1LCoJsaimfGq-kepeudqC3jNcXkUr2Akczj9RGbWxzfvXcEDsK_JNG74-aLEX_DETRGL27oZjnTUVXnFvDlPLpOlCotoAcTENr7lrG370GQQ"
+        }
+      }
+    ],
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "connection": "keep-alive",
+            "host": "tgi.praetori.nl",
+            "x-forwarded-scheme": "https",
+            "x-forwarded-proto": "https",
+            "x-forwarded-for": "83.234.227.70",
+            "x-real-ip": "83.234.227.70",
+            "content-length": "172",
+            "content-type": "application/json",
+            "user-agent": "PostmanRuntime/7.37.3",
+            "accept": "*/*",
+            "cache-control": "no-cache",
+            "postman-token": "b8650616-4828-42ec-bdec-dd9633644b60",
+            "accept-encoding": "gzip, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "Person Name and Surname": "Alexander Mercer",
+            "Email": "alexander.mercer@example.com",
+            "Company": "Mercer Global Consulting",
+            "LinkedIn_URL": "https://linkedin.com/in/alexander-mercer-consulting"
+          },
+          "webhookUrl": "https://tgi.praetori.nl/webhook-test/40f6e2d0-0882-4405-8582-aa5e4f5304f9",
+          "executionMode": "test"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Login": {
+      "main": [
+        [
+          {
+            "node": "Getting a company domain name",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Social Scraper Turbo (Company)": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Getting a company domain name": {
+      "main": [
+        [
+          {
+            "node": "Email Social Scraper Turbo (Company)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Whois API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Person",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "B2B Company Data Enrichment",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Website Contacts Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Person": {
+      "main": [
+        [
+          {
+            "node": "Merge7",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Real-Time LinkedIn Scraper API (Person) Accurate LinkedIn profiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Real-Time LinkedIn Scraper API (Person) Accurate LinkedIn profiles": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn Full profile information",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Full profile information": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn Posts Person",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn All company details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn All company details": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn Number of employees in the company (possible filter by location)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Search Person": {
+      "main": [
+        [
+          {
+            "node": "Social Links Search Person1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "encodeURI_person": {
+      "main": [
+        [
+          {
+            "node": "Google Search Person",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Facebook Scraper Elon Musk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Posts Person": {
+      "main": [
+        [
+          {
+            "node": "encodeURI_personURL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "encodeURI_personURL": {
+      "main": [
+        [
+          {
+            "node": " LinkedIn_Get_user_Article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Get Profile position with Skils": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Links Search Person1": {
+      "main": [
+        [
+          {
+            "node": "Email_Verifier1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit COM": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "encodeURI_person",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "encodeURI_person1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [],
+        [],
+        [
+          {
+            "node": "encodeURI_person2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " LinkedIn_Get_user_Article": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn Get Profile position with Skils",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Twitter_Profile_search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Supabase5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twitter_Profile_search": {
+      "main": [
+        [
+          {
+            "node": "Twitter_Followers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twitter_Followers": {
+      "main": [
+        [
+          {
+            "node": "Twitter_affiliates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twitter_affiliates": {
+      "main": [
+        [
+          {
+            "node": "Twitter_replies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twitter_replies": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "encodeURI_person1": {
+      "main": [
+        [
+          {
+            "node": "Reddit COM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "encodeURI_person2": {
+      "main": [
+        [
+          {
+            "node": "Facebook Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Supabase6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email_Verifier1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Supabase7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Scraper": {
+      "main": [
+        [
+          {
+            "node": "Supabase8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Merge10",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "LinkedIn Number of employees in the company (possible filter by location)": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Merge5",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge5": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Whois API": {
+      "main": [
+        [
+          {
+            "node": "Supabase2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B2B Company Data Enrichment": {
+      "main": [
+        [
+          {
+            "node": "Supabase3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Website Contacts Scraper": {
+      "main": [
+        [
+          {
+            "node": "Supabase4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge6": {
+      "main": [
+        [
+          {
+            "node": "Merge8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge7": {
+      "main": [
+        [
+          {
+            "node": "Merge8",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge8": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge4": {
+      "main": [
+        [
+          {
+            "node": "Merge10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge10": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase1": {
+      "main": [
+        [
+          {
+            "node": "Login",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase2": {
+      "main": [
+        [
+          {
+            "node": "Merge6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase3": {
+      "main": [
+        [
+          {
+            "node": "Merge6",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Supabase4": {
+      "main": [
+        [
+          {
+            "node": "Merge7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase5": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Supabase6": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase7": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase8": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Supabase1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "817baed9-40f6-40a4-b5a7-83273d11ae47",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "37eb329637111ffde162ec59e398af4f754e0c6ae1208038d835bac44ae74089"
+  },
+  "id": "vuMt26nAaNs43oBS",
+  "tags": []
+}
