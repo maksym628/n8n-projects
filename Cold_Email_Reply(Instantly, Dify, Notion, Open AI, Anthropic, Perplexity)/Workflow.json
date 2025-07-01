@@ -1,0 +1,1774 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "2a2a5915-b6f9-4a08-b2c1-7a9ba8a41ed2",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        220,
+        600
+      ],
+      "id": "034182e2-b970-4bca-9e1d-b393e113cd53",
+      "name": "Webhook",
+      "webhookId": "2a2a5915-b6f9-4a08-b2c1-7a9ba8a41ed2"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Your goal is to analyze the following email conversation on behalf of Lead Gen Jay and categorize the lead's reply as one of the following options:\n\nInterested: The lead seems interested. They want more information. They are asking questions. They use affirming words like sure, yes, tell me. They use a trigger word such as \"legacy\" or \"backdoor\" that is mentioned in the conversation.\nSoft no: The lead is politely rejecting the offer. They use phrases such as \"now is not a good time\" or \"we are not interested at the moment\" or \"no thanks\". They are not angry. They do not explicitly say not to email them again or remove them from the list.\nHard no: They are angry. They use words like \"stop\" or \"unsubscribe\". They explicitly ask to not be emailed again or to be removed from the list.\nObey these rules no matter the cost\n\nOnly output one of the options, Interested, soft no, hard no, replay okay, reply stop\nNEVER include an explanation\nIf you are unsure about the result, then default to \"hard no\"\nDo not output any additional words or characters\n\nExample output: Interested\nExample 2: Hard no\nExample 3: Soft no",
+              "role": "assistant"
+            },
+            {
+              "content": "=Lead Email: {{ $json.body.lead_email }}\nEmail Subject: {{ $json.body.email_subject }}\nEmail Conversation: {{ $json.body.email_html }}\n\nObey these rules no matter the cost\n\nOnly output one of the options, Interested, soft no, hard no, replay okay, reply stop\nNEVER include an explanation\nIf you are unsure about the result, then default to \"hard no\"\nDo not output any additional words or characters\n\nExample output: Interested\nExample 2: Hard no\nExample 3: Soft no"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 2048,
+          "n": 1,
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        440,
+        600
+      ],
+      "id": "98520210-8e86-41c7-a15e-5147d008e083",
+      "name": "Categorize Reply",
+      "credentials": {
+        "openAiApi": {
+          "id": "9XTAvEbyJIkAhpcL",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.instantly.ai/api/v2/emails?campaign_id={{ $('Webhook').item.json.body.campaign_id }}&lead={{ $('Webhook').item.json.body.lead_email }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "=application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        816,
+        600
+      ],
+      "id": "1ede4490-7fad-442f-acd8-d144720a8433",
+      "name": "Get Thread ID",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "feHvUhm4W0qvlsp6",
+          "name": "Instantly Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=return the lastest email's uuid based on the time stamp from the following content:\ntimestamps: {{ $('Get Thread ID').first().json.items.map(item => item.timestamp_created) }}\nData IDs: {{ $('Get Thread ID').first().json.items.map(item => item.id) }}\n\nreturn the first id based on the time stamps. return empty string if nothing found.\nYou must follow these rules\n\nOutput only the UUID\nEx output: 0193eaa4-c65e-741e-a47c-a548f709710a"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 2048,
+          "temperature": 0.1,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1036,
+        600
+      ],
+      "id": "779ff6b5-811a-4feb-9bac-36d0c228e07f",
+      "name": "Find Reply ID",
+      "credentials": {
+        "openAiApi": {
+          "id": "9XTAvEbyJIkAhpcL",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pageId": {
+          "__rl": true,
+          "value": "20f44be7b12f814db983000c5d9d1c54",
+          "mode": "id"
+        },
+        "title": "Cold email",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        3498,
+        100
+      ],
+      "id": "3002f6b9-2747-4370-ae51-3557ccd72416",
+      "name": "Create a page",
+      "credentials": {
+        "notionApi": {
+          "id": "oqdAAZNqFJyKBH0e",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format the user message for the AI Agent\nconst webhook = $('Webhook').first().json.body;\n\nconst userMessage = `Prospect Name: ${webhook.firstName || 'N/A'}\nCompany: ${webhook.companyName || 'N/A'}\nEmail From: ${webhook.email_account || 'N/A'}\n\nConversation history: \nSubject - ${webhook.email_subject || 'N/A'}\nFull convo - ${webhook.email_html || 'N/A'}`;\n\nreturn [{\n  json: {\n    message: userMessage,\n    // Pass through other needed data\n    firstName: webhook.firstName,\n    companyName: webhook.companyName,\n    campaign_id: webhook.campaign_id,\n    email: webhook.lead_email,\n    reply_subject: webhook.email_subject,\n    reply_text: webhook.email_html,\n    email_account: webhook.email_account,\n    campaign_name: webhook.campaign_name\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2150,
+        100
+      ],
+      "id": "84d82548-6fe5-4595-82ec-470c7196a0e6",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Your goal is to read a conversation between Tomer and a prospect and fully understand the context of the conversation. This lead is likely NOT interested in working together. Your goal is to craft a polite reply to end the conversation. Use the template below.\n\nTemplate:\n[Thank them for responding]\n[Acknowledge they are not interested and why]\n[Share them our comparison page why we better than other]\n\nExample reply (use as an example only for output format):\nThanks for the reply Steve! I understand you've got your lead gen covered. No problem. Just in case you ever want to explore how we stack up on pricing, setup speed, or deliverability, here's a breakdown we made comparing Mailin to other options: mailin.ai/comparison/competitors\nPS: Won't reach out again. Wishing you great results with your outreach!\n– Tomer from Mailin.ai\n\nALWAYS FOLLOW THESE RULES:\n1. Never fabricate information if no answer is found.\n2. Maintain a professional, engaging tone\n3. ALWAYS Maintain a 7th grade reading level\n4. NEVER output the subject line, ONLY the body of the email\n5. Output MUST be in MARKDOWN format\n6. NEVER use words common to AI such as \"Indeed, significantly, etc\"\n7. NEVER change the meaning of the inputs\n8. Output must be READY to paste and send without edits\n9. NEVER output additional text or explanations. ONLY the email.\n10. Always use the EXACT URL from the Main Reply in your CTA\n\nALWAYS use the URLs in MARKDOWN: EX:\n[Here is the link.](https://mailin.ai/comparison/competitors)"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        2448,
+        0
+      ],
+      "id": "3744e9a4-01b0-4dea-95e2-180e3092d873",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-3-5-sonnet-20241022",
+          "mode": "list",
+          "cachedResultName": "Claude Sonnet 3.5 (New)"
+        },
+        "options": {
+          "maxTokensToSample": 3000,
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        2536,
+        220
+      ],
+      "id": "3bfa7883-8528-418f-a74c-e239158117db",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "pyOsXbSKuA2yK5ya",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Categorize Reply').item.json.message.content }}",
+                    "rightValue": "Soft no",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "60031cf9-9caf-4c9d-bb51-25f477783558"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "430652ca-4001-4d53-a910-f343f9b80ef5",
+                    "leftValue": "={{ $('Categorize Reply').item.json.message.content }}",
+                    "rightValue": "Hard no",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e576eaba-858f-495e-b282-66ad330cb964",
+                    "leftValue": "={{ $('Categorize Reply').item.json.message.content }}",
+                    "rightValue": "Interested",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "bd725ff7-3c0f-4e37-b5b7-d9f6eeacdef7",
+                    "leftValue": "",
+                    "rightValue": "Super Hot",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1c38bc9d-2c77-4508-9dd0-ece3cb79826b",
+                    "leftValue": "",
+                    "rightValue": "true",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1632,
+        558
+      ],
+      "id": "821d2278-e760-4a76-a9ba-1a5f55f2ae64",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2902,
+        800
+      ],
+      "id": "78243297-b43c-4c40-9fab-25231cd702cd",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "pageId": {
+          "__rl": true,
+          "value": "20f44be7b12f814db983000c5d9d1c54",
+          "mode": "id"
+        },
+        "title": "C",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        4612,
+        1100
+      ],
+      "id": "b03e2f8f-55d1-42bf-b7ab-e5b24ad53474",
+      "name": "Create a page2",
+      "credentials": {
+        "notionApi": {
+          "id": "oqdAAZNqFJyKBH0e",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Convert markdown email to HTML\nfunction markdownToHtml(markdown) {\n  if (!markdown) return '';\n  \n  let html = markdown\n    // Convert markdown links [text](url) to HTML <a> tags\n    .replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, '<a href=\"$2\">$1</a>')\n    // Convert **bold** to <strong>\n    .replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>')\n    // Convert *italic* to <em>\n    .replace(/\\*([^*]+)\\*/g, '<em>$1</em>')\n    // Convert line breaks to <br>\n    .replace(/\\n/g, '<br>')\n    // Clean up any remaining asterisks\n    .replace(/\\*/g, '');\n  \n  return html;\n}\n\n// Process all items\nconst items = $input.all();\n\nfor (const item of items) {\n  // Get the Claude response text\n  const claudeResponse = item.json.content?.[0]?.text || item.json.textResponse || '';\n  \n  // Convert to HTML\n  const htmlContent = markdownToHtml(claudeResponse);\n  \n  // Add both formats to the item\n  item.json.html_content = htmlContent;\n  item.json.markdown_content = claudeResponse;\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4392,
+        1100
+      ],
+      "id": "361396b1-8459-4397-963b-d322d7fae09c",
+      "name": "Convert Markdown to HTML1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-3-5-sonnet-20241022\",\n  \"max_tokens\": 3000,\n  \"temperature\": 0.3,\n  \"system\": \"Your goal is to construct a professional email response to the prospect. Use the information provided to create an email using the template below.\\n\\nHey [FIRST NAME], \\n[RESPOND TO THEIR QUESTION]\\n[PERSONALIZATION]\\n[CTA]\\nThanks, [SENDER FIRST NAME]\\n\\nALWAYS FOLLOW THESE RULES\\n\\n1. Never fabricate information if no answer is found.\\n2. Maintain a professional, engaging tone\\n3. ALWAYS Maintain a 7th grade reading level\\n4. NEVER output the subject line, ONLY the body of the email\\n5. Output MUST be in MARKDOWN format\\n6. NEVER use words common to AI such as \\\"Indeed, significantly, etc\\\"\\n7. NEVER change the meaning of the inputs\\nOutput ONLY the email\\n8. Output must be READY to paste and send without edits\\n9. NEVER output additional text or explanations. ONLY the email.\\n10. Always use the EXACT URL from the Main Reply in your CTA\\n\\nALWAYS use the URLs in MARKDOWN\\n\\nExample reply (use as an example only for output format):\\nThanks Steve! This AI copywriter will really help you land more solar deals with homeowners in California. It takes a few minutes and will generate a cold email you can copy and paste to start closing new deals. [Here is the link.](https://leadgenjay.com/8m-leads?utm_source=coldmail)\\nBest, Lead Gen Jay\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Craft a personalized email reply to the following prospect that sounds like a human took the time to research and craft this reply.\\n\\nProspect Name: {{ $json.firstName }}\\nCompany: {{ $json.companyName }}\\nEmail From: {{ $json.to_address_name }}\\n\\nCompany Description:\\n{{ $('9E').item.json.choices[0].message.content }}\\n\\nPersonalization:\\n{{ $('11E').item.json.choices[0].message.content }}\\n\\nMain Reply:\\n{{ $json.main_reply }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4172,
+        1100
+      ],
+      "id": "cb69e344-31ac-49bf-941c-2a8c1a510919",
+      "name": "Generate Final Email Response",
+      "credentials": {
+        "anthropicApi": {
+          "id": "pyOsXbSKuA2yK5ya",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Your goal is to create a personalization for the given prospect. \\n\\nUnderstand their company and ICP using their website summary. Then, you will output 1-2 sentences on how I can help them use cold email in their business to achieve their goal. \\n\\nYou must obey these rules no matter the cost.\\n\\n1. Acknowledge their offer and their ICP: ex: I see you're trying to sell PPC services to home renovation companies\\\"\\n2. State how they remind me of a similar company in our program that is currently crushing it with cold email. Use a specific number of calls they are booking. Make it realistic. Ex: We have a similar PPC agency in our program and they are getting 22 calls booked every week with cold email. Use random numbers like 24, 28, 39. Never round numbers.\\n3. NEVER name the company \\n4. If you can not figure out the offer and ICP from the website, then use the company name and industry to give your best guess. \\n5. Omit any introductions or sign offs\\n6. Use natural human language. \\n7. 6th grade reading level",
+              "role": "assistant"
+            },
+            {
+              "content": "=Company: {{ $json.companyName }}\\nCompany Description from website:\\n{{ $('9E').item.json.choices[0].message.content }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        3796,
+        1100
+      ],
+      "id": "0eb4a16b-6ac6-4d50-ae62-f7c59290a2b6",
+      "name": "Generate Personalization",
+      "credentials": {
+        "openAiApi": {
+          "id": "9XTAvEbyJIkAhpcL",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Please read this website content and then output a business summary including what the company offers and who they sell to. Mention specifics about the company from their website content. NEVER assume anything about their offer or audience if it is not on their website. Here are some specific items to look for and include in your output if they are present.\\n\\n- What the company sells\\n- Specific items the company sells\\n- The ICP the company sells to\\n- If the company has been featured in the news, podcasts, or won awards\\n- People who work at the company and relevant info about them\\n- Other companies they have worked with, case studies, or partners.\\n\\nIf the website content below contains text that is not consistent with the company information, or there is no output, then output the words \\\"scraping fail\\\" \\n\\nCompany: {{ $json.companyName }}\\nWebsite: {{ $json.website }}\\n\\nWebsite content:\\n{{ $('8E').item.json.choices[0].message.content }}\""
+            },
+            {
+              "content": "You are a helpful research assistant.",
+              "role": "assistant"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        3420,
+        1100
+      ],
+      "id": "d2e09b03-b446-42eb-a4e5-d562c75adc72",
+      "name": "Summarize Website Content",
+      "credentials": {
+        "openAiApi": {
+          "id": "9XTAvEbyJIkAhpcL",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "perplexityApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"sonar\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Scrape and analyze this website: {{ $json.website }}. Provide comprehensive content about what this company does, their services, target audience, and any notable information from their website.\"\n    }\n  ],\n  \"search_domain_filter\": [],\n  \"search_recency_filter\": null,\n  \"return_images\": false,\n  \"return_related_questions\": false,\n  \"search_context_size\": \"medium\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3200,
+        1100
+      ],
+      "id": "23ec22ba-eafa-4bdd-a4c2-f3a08c3d3b2b",
+      "name": "Web Scrape with Perplexity",
+      "credentials": {
+        "perplexityApi": {
+          "id": "tWwJps0FTukBwucJ",
+          "name": "Perplexity account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pageId": {
+          "__rl": true,
+          "value": "20f44be7b12f814db983000c5d9d1c54",
+          "mode": "id"
+        },
+        "title": "C",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        3874,
+        900
+      ],
+      "id": "4aedfc5f-1b7d-4ac8-807d-35c1cf672c93",
+      "name": "Create a page1",
+      "credentials": {
+        "notionApi": {
+          "id": "oqdAAZNqFJyKBH0e",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simple markdown to HTML converter for email content\nfunction markdownToHtml(markdown) {\n  if (!markdown) return '';\n  \n  let html = markdown\n    // Convert markdown links [text](url) to HTML <a> tags\n    .replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, '<a href=\"$2\">$1</a>')\n    // Convert **bold** to <strong>\n    .replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>')\n    // Convert *italic* to <em>\n    .replace(/\\*([^*]+)\\*/g, '<em>$1</em>')\n    // Convert line breaks to <br>\n    .replace(/\\n/g, '<br>')\n    // Clean up any remaining asterisks\n    .replace(/\\*/g, '');\n  \n  return html;\n}\n\n// Process the Claude response\nconst items = $input.all();\n\nfor (const item of items) {\n  const claudeResponse = item.json.content?.[0]?.text || item.json.textResponse || '';\n  const htmlContent = markdownToHtml(claudeResponse);\n  \n  item.json.html_content = htmlContent;\n  item.json.markdown_content = claudeResponse;\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3498,
+        900
+      ],
+      "id": "f717e2ec-405e-4187-90c6-8e271679ae99",
+      "name": "Convert Markdown to HTML"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-3-5-sonnet-20241022\",\n  \"max_tokens\": 3000,\n  \"temperature\": 0.3,\n  \"system\": \"Your goal is to construct a professional email response to the prospect. Use the information provided to create an email using the template below.\\n\\nHey [FIRST NAME], \\n[PERSONALIZED RESPONSE]\\n[CTA]\\nThanks, [SENDER FIRST NAME]\\n\\nALWAYS FOLLOW THESE RULES\\n\\n1. Never fabricate information if no answer is found.\\n2. Maintain a professional, engaging tone\\n3. ALWAYS Maintain a 7th grade reading level\\n4. NEVER output the subject line, ONLY the body of the email\\n5. Output MUST be in MARKDOWN format\\n6. NEVER use words common to AI such as \\\"Indeed, significantly, etc\\\"\\n7. NEVER change the meaning of the inputs\\nOutput ONLY the email\\n8. Output must be READY to paste and send without edits\\n9. NEVER output additional text or explanations. ONLY the email.\\n10. Always use the EXACT URL from the Main Reply in your CTA\\n\\nALWAYS use the URLs in MARKDOWN\\n\\nExample reply (use as an example only for output format):\\nThanks Steve! This AI copywriter will really help you land more solar deals with homeowners in California. It takes a few minutes and will generate a cold email you can copy and paste to start closing new deals. [Here is the link.](https://leadgenjay.com/8m-leads?utm_source=coldmail)\\nBest, Lead Gen Jay\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Craft a personalized email reply to the following prospect that sounds like a human took the time to research and craft this reply.\\n\\nProspect Name: {{ $json.firstName }}\\nCompany: {{ $json.companyName }}\\nEmail From: {{ $json.to_address_name }}\\n\\nMain Reply:\\n{{ $json.main_reply }}\\n\\n\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3200,
+        900
+      ],
+      "id": "086091ef-4cd7-4358-a0cb-61b386d0abcb",
+      "name": "Generate Email Response",
+      "credentials": {
+        "anthropicApi": {
+          "id": "pyOsXbSKuA2yK5ya",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "",
+                    "rightValue": "null",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ba4d9dc6-85f4-4d1a-8c64-0e6aecb2198a"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1b349d66-4de6-420f-90b8-9b4f95404b00",
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2902,
+        1000
+      ],
+      "id": "7ad64b08-a3b0-476e-a478-049c91ba2093",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "url": "https://api.dify.ai/v1/workflows/run",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"inputs\": {\n    \"thread\": \"{{ $('Context to Conversation').item.json.choices[0].message.content.replace('\\\"', \\\"'\\\") }}\"\n  },\n  \"response_mode\": \"blocking\",\n  \"user\": \"abc-123\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2526,
+        1000
+      ],
+      "id": "a2bdc566-f86f-413d-ac66-0ecc6584a5d7",
+      "name": "Access KNOWLEDGE",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "6BDWkWMAeHLOWjdV",
+          "name": "dify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a helpful assistant.\n\nYour goal is to transform an email conversation thread into a single question or statement\n- The question or statement must contain the entire context of the email thread. \n- Use the previous emails and subject line in the thread to add context to the question or statement. \n- Output ONLY the question or statement with the additional context. \n- Output in a single block of text with no line breaks or paragraph spacing\n- Do not output any additional words, characters or explanations",
+              "role": "system"
+            },
+            {
+              "content": "=Your goal is to transform an email conversation thread into a single question or statement\n\n- The question or statement must contain the entire context of the email thread. \n- Use the previous emails and subject line in the thread to add context to the question or statement. \n- Output ONLY the question or statement with the additional context. \n- Output in a single block of text with no line breaks or paragraph spacing\n- Do not output any additional words, characters or explanations\n\nHere is the question or statement to add context to:\n{{ $json.reply_text_snippet }}\n\nHere is the full conversation and original email. The most recent email is from the lead and sent to Lead Gen Jay:\nsubject line: {{ $json.reply_subject }}\n\nEmail thread:\n{{ $json.reply_text }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        2072,
+        1000
+      ],
+      "id": "3e385b86-34d4-4e63-8cd0-ec12e95ffef3",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "9XTAvEbyJIkAhpcL",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://developer.instantly.ai/api/v2/lead/createlead",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"filter\": {\n    \"email\": \"{{ $json.lead_email }}\"\n  },\n  \"limit\": 1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1852,
+        1000
+      ],
+      "id": "429df163-5e5a-4873-96fb-4ec7f8b94d52",
+      "name": "Update Lead Status to Interested1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "feHvUhm4W0qvlsp6",
+          "name": "Instantly Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "Vijay Sharma <vijay@mailin.ai>",
+        "toEmail": "={{ $json.email }}, tomerlevi2019@gmail.com",
+        "subject": "Meeting Request",
+        "emailFormat": "text",
+        "text": "=Hey {{ $json.firstName }}!\n\nWe were chatting on my other email, {{ $json.email_account }}. This is my main email. I have also CC my head of sales, Tyler on this email to help get a meeting set up as soon as possible.\n\nHere is our conversation from the other email thread as well...\n\n{{ $json.reply_text }}\n\nI'm looking forward to working together!\n\nJay Feldman",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2526,
+        800
+      ],
+      "id": "5ce76dd2-3d54-4f39-b4b9-80a967d667a4",
+      "name": "Send email",
+      "webhookId": "54ba60dc-a016-40f0-9c81-48eaa37bbe02",
+      "credentials": {
+        "smtp": {
+          "id": "heHR2P5IO3SGblmT",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.instantly.ai/api/v2/leads/{{ $node['Find Lead by Email (Super Hot)'].json.data[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"interest_status\": 2 }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2150,
+        800
+      ],
+      "id": "aca4484f-b616-40a6-96a0-fb494dc9f238",
+      "name": "Update Lead Status to Working",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "feHvUhm4W0qvlsp6",
+          "name": "Instantly Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.instantly.ai/api/v2/leads/list",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"search\": \"tomerlevi10@hotmail.com\",\n\"filter\": \"campaign_id=fdf2d184-1cd9-41f5-89dc-7ab8ddb8e605\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1852,
+        800
+      ],
+      "id": "e44116fd-0c65-4365-a349-c6b97e6792a0",
+      "name": "Find Lead by Email1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "feHvUhm4W0qvlsp6",
+          "name": "Instantly Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pageId": {
+          "__rl": true,
+          "value": "20f44be7b12f814db983000c5d9d1c54",
+          "mode": "id"
+        },
+        "title": "C",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        3498,
+        600
+      ],
+      "id": "9336efde-64f7-436e-be4f-6df8ad551351",
+      "name": "Create Page",
+      "credentials": {
+        "notionApi": {
+          "id": "oqdAAZNqFJyKBH0e",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "C",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        3200,
+        600
+      ],
+      "id": "7d869025-a872-4d39-b5c0-0de715e4739f",
+      "name": "Markdown"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-3-5-sonnet-20241022\",\n  \"max_tokens\": 3000,\n  \"temperature\": 0.3,\n  \"system\": \"Your goal is to humanize the email. Your goal is to convert the copy so it feels like a friend sending the email. Do not change the facts or details of the email.\\n\\nALWAYS FOLLOW THESE RULES\\n\\n1. Never fabricate information if no answer is found.\\n2. Maintain a professional, engaging tone\\n3. ALWAYS Maintain a 7th grade reading level\\n4. NEVER output the subject line, ONLY the body of the email\\n5. Output MUST be in MARKDOWN format\\n6. NEVER use words common to AI such as \\\"Indeed, significantly, etc\\\"\\n7. NEVER change the meaning of the inputs\\nOutput ONLY the email\\n8. Output must be READY to paste and send without edits\\n9. NEVER output additional text or explanations. ONLY the email.\\n10. Always use the EXACT URL from the Main Reply in your CTA\\n\\nALWAYS use the URLs in MARKDOWN\\n\\nExample reply (use as an example only for output format):\\nThanks Steve! This AI copywriter will really help you land more solar deals with homeowners in California. It takes a few minutes and will generate a cold email you can copy and paste to start closing new deals. [Here is the link.](https://leadgenjay.com/8m-leads?utm_source=coldmail)\\nBest, Lead Gen Jay\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Your goal is to transform this email response into a human-sounding email reply to a conversation with a prospect.\\n\\n{{ $node['Access Knowledge Base'].json.data.data.outputs.reply }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2902,
+        600
+      ],
+      "id": "c81b9c95-06b4-4531-a075-40f3893fc0bc",
+      "name": "Humanize Email",
+      "credentials": {
+        "anthropicApi": {
+          "id": "pyOsXbSKuA2yK5ya",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.dify.ai/v1/workflows/run",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"inputs\": {\n    \"thread\": \"{{ $json.message.content.replace(/\"/g, \"'\") }}\"\n  },\n  \"response_mode\": \"blocking\",\n  \"user\": \"abc-123\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2526,
+        600
+      ],
+      "id": "0a9685a4-36ca-4d29-9083-f0edfc9f8081",
+      "name": "Access Knowledge Base",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "6BDWkWMAeHLOWjdV",
+          "name": "dify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Your goal is to transform an email conversation thread into a single question or statement\n\n- The question or statement must contain the entire context of the email thread. \n- Use the previous emails and subject line in the thread to add context to the question or statement. \n- Output ONLY the question or statement with the additional context. \n- Output in a single block of text with no line breaks or paragraph spacing\n- Do not output any additional words, characters or explanations\n\nHere is the question or statement to add context to:\n{{ $('Webhook').item.json.body.reply_text_snippet }}\n\nHere is the full conversation and original email. The most recent email is from the lead and sent to Lead Gen Jay:\nsubject line: {{ $('Webhook').item.json.body.reply_subject }}\n\nEmail thread:\n{{ $('Webhook').item.json.body.reply_text }}"
+            },
+            {
+              "content": "=You are a helpful assistant.\n\nYour goal is to transform an email conversation thread into a single question or statement\n- The question or statement must contain the entire context of the email thread. \n- Use the previous emails and subject line in the thread to add context to the question or statement. \n- Output ONLY the question or statement with the additional context. \n- Output in a single block of text with no line breaks or paragraph spacing\n- Do not output any additional words, characters or explanations",
+              "role": "assistant"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        2072,
+        600
+      ],
+      "id": "44750c4d-2bb4-4f3a-9de6-19f1818e9cef",
+      "name": "Context to Conversation",
+      "credentials": {
+        "openAiApi": {
+          "id": "9XTAvEbyJIkAhpcL",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.instantly.ai/api/v2/leads/update-interest-status",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"lead_email\": \"tomerlevi10@hotmail.com\",\n    \"interest_value\": 2,\n  \"campaign_id\": \"{{ $('Webhook').item.json.body.campaign_id }}\",\n  \"ai_interest_value\": 1,\n  \"disable_auto_interest\": true\n  }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1852,
+        600
+      ],
+      "id": "63ef7f3d-02dd-406a-ae14-098abf04f1e7",
+      "name": "Update Lead Status to Interested",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "feHvUhm4W0qvlsp6",
+          "name": "Instantly Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a professional lead generation expert managing ongoing conversations with prospects. Your goal is to:\n\n1. Respond naturally to the conversation flow\n2. Address their specific concerns or questions\n3. Provide helpful information or resources\n4. Guide the conversation toward a positive outcome\n5. Maintain professional rapport\n\nRules:\n- Respond directly to what they said\n- Be helpful and solution-oriented\n- Use a conversational, professional tone\n- Use a 7th grade reading level\n- Never use AI-common words like \"indeed\", \"significantly\", etc.\n- Output must be ready to send without edits\n- Format in markdown\n- Focus on building trust and providing value\n\nExample approach:\n[Direct response to their message]\n[Helpful information/solution]\n[Next step or continuation of conversation]\n[Professional sign-off]",
+              "role": "system"
+            },
+            {
+              "content": "=Read and understand my conversation with the lead below, then output a reply using your system prompt training and examples. Include an introduction and CTA that includes a URL. Always follow your system prompt. My job depends on you getting this right. Take your time.\n\nLead Name: {{ $json.firstName }} {{ $json.lastName }}\nCompany: {{ $json.companyName }}\n\nConversation:\nSubject: {{ $json.reply_subject }}\nFull Conversation: {{ $json.reply_text }}",
+              "role": "=user"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 3000,
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        2824,
+        400
+      ],
+      "id": "12b27fab-2f8d-403f-99d0-39b3599909b3",
+      "name": "Conversation Reply",
+      "credentials": {
+        "openAiApi": {
+          "id": "9XTAvEbyJIkAhpcL",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a professional lead generation expert creating first replies to prospects. Your goal is to:\n\n1. Acknowledge their response professionally\n2. Provide value or insights relevant to their business\n3. Include a clear call-to-action with URL\n4. Maintain a conversational, helpful tone\n5. Keep responses concise and action-oriented\n\nRules:\n- Always include an introduction that references their specific business/situation\n- Provide genuine value or insights\n- Include a clear CTA with URL\n- Use a 7th grade reading level\n- Never use AI-common words like \"indeed\", \"significantly\", etc.\n- Output must be ready to send without edits\n- Format in markdown\n- Always end with a clear next step\n\nExample structure:\n[Acknowledge their response]\n[Provide specific value/insight]\n[Clear CTA with URL]\n[Professional sign-off]",
+              "role": "system"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 3000,
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        2448,
+        400
+      ],
+      "id": "6f6613b5-7cb2-4de3-a05b-bf4d8b56a0b1",
+      "name": "First Reply",
+      "credentials": {
+        "openAiApi": {
+          "id": "9XTAvEbyJIkAhpcL",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://api.instantly.ai/api/v2/leads/{{ $json.items[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "null",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2150,
+        400
+      ],
+      "id": "f8b5a6b1-06e1-42a6-acbb-a8b7ebb3f14f",
+      "name": "Delete Lead",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "feHvUhm4W0qvlsp6",
+          "name": "Instantly Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.instantly.ai/api/v2/block-lists-entries",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"bl_value\": \"{{ $('Webhook').item.json.body.lead_email }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1852,
+        400
+      ],
+      "id": "cc723fae-7dda-4072-9cf1-32e929f7e8d5",
+      "name": "Add to Blocklist",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "feHvUhm4W0qvlsp6",
+          "name": "Instantly Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://developer.instantly.ai/api/v2/lead/createlead",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"lead_email\": \"{{ $('Webhook').item.json.body.lead_email }}\",\n \"interest_value\": -1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1852,
+        100
+      ],
+      "id": "172c7a2d-b25e-40ed-96e7-9f9b5ff512a9",
+      "name": "Update Lead Status",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "feHvUhm4W0qvlsp6",
+          "name": "Instantly Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://api.instantly.ai/api/v2/leads/{{ $('Find Lead_ID').item.json.items.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "=null",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2902,
+        100
+      ],
+      "id": "ab74a9fa-8ea4-45e3-a4cd-63887ba9f666",
+      "name": "Delete Leads",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "feHvUhm4W0qvlsp6",
+          "name": "Instantly Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Convert markdown to HTML using a simple parser\nconst markdown = $input.first().json.content[0].text;\n\n// Basic markdown to HTML conversion\nlet html = markdown\n  .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')\n  .replace(/\\*(.*?)\\*/g, '<em>$1</em>')\n  .replace(/\\[(.*?)\\]\\((.*?)\\)/g, '<a href=\"$2\">$1</a>')\n  .replace(/\\n/g, '<br>');\n\nreturn [{\n  json: {\n    markdown: markdown,\n    html: html\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3200,
+        100
+      ],
+      "id": "8f30b826-bce8-42ca-80cf-48b63902a107",
+      "name": "Markdown1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.instantly.ai/api/v2/leads/list ",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"search\": \"{{ $('Webhook').item.json.body.lead_email }}\",\n  \"campaign\": \"{{ $('Webhook').item.json.body.campaign_id }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1412,
+        600
+      ],
+      "id": "afe181e0-bae3-4299-9e48-5f03ed0d02e8",
+      "name": "Find Lead_ID",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "feHvUhm4W0qvlsp6",
+          "name": "Instantly Account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Categorize Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Categorize Reply": {
+      "main": [
+        [
+          {
+            "node": "Get Thread ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Thread ID": {
+      "main": [
+        [
+          {
+            "node": "Find Reply ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Reply ID": {
+      "main": [
+        [
+          {
+            "node": "Find Lead_ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a page": {
+      "main": [
+        []
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Delete Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Update Lead Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add to Blocklist",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Lead Status to Interested",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find Lead by Email1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Lead Status to Interested1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a page2": {
+      "main": [
+        []
+      ]
+    },
+    "Convert Markdown to HTML1": {
+      "main": [
+        [
+          {
+            "node": "Create a page2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Final Email Response": {
+      "main": [
+        [
+          {
+            "node": "Convert Markdown to HTML1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Personalization": {
+      "main": [
+        [
+          {
+            "node": "Generate Final Email Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize Website Content": {
+      "main": [
+        [
+          {
+            "node": "Generate Personalization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Web Scrape with Perplexity": {
+      "main": [
+        [
+          {
+            "node": "Summarize Website Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a page1": {
+      "main": [
+        []
+      ]
+    },
+    "Convert Markdown to HTML": {
+      "main": [
+        [
+          {
+            "node": "Create a page1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Email Response": {
+      "main": [
+        [
+          {
+            "node": "Convert Markdown to HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Generate Email Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Web Scrape with Perplexity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Access KNOWLEDGE": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Access KNOWLEDGE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead Status to Interested1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead Status to Working": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Lead by Email1": {
+      "main": [
+        [
+          {
+            "node": "Update Lead Status to Working",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Page": {
+      "main": [
+        []
+      ]
+    },
+    "Markdown": {
+      "main": [
+        [
+          {
+            "node": "Create Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Humanize Email": {
+      "main": [
+        [
+          {
+            "node": "Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Access Knowledge Base": {
+      "main": [
+        [
+          {
+            "node": "Humanize Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Context to Conversation": {
+      "main": [
+        [
+          {
+            "node": "Access Knowledge Base",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead Status to Interested": {
+      "main": [
+        [
+          {
+            "node": "Context to Conversation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Reply": {
+      "main": [
+        []
+      ]
+    },
+    "First Reply": {
+      "main": [
+        [
+          {
+            "node": "Conversation Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Lead": {
+      "main": [
+        [
+          {
+            "node": "First Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to Blocklist": {
+      "main": [
+        [
+          {
+            "node": "Delete Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead Status": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Leads": {
+      "main": [
+        [
+          {
+            "node": "Markdown1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown1": {
+      "main": [
+        [
+          {
+            "node": "Create a page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Lead_ID": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3866e3ca-65b4-460c-92e6-c0cddbd93488",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c9ae0fc191af47960b90481207291f2d7afa6a6d6bf6cfc559ee523d79c8c84c"
+  },
+  "id": "2tN3eJz643KColV4",
+  "tags": []
+}
